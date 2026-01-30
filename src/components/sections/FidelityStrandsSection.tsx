@@ -66,12 +66,24 @@ function StrandAccordion({
   const fidelityData = watch('fidelityStrands')
   const strandData = fidelityData?.[strand.id as keyof typeof fidelityData] as FidelityStrand | undefined
 
-  // Calculate progress for this strand
+  // Calculate progress for this strand (only count valid numeric ratings)
   const totalItems = strand.challengeItems.length + strand.capacityItems.length +
     (strand.capacityGroups?.reduce((sum, g) => sum + g.items.length, 0) || 0)
-  const completedItems =
-    Object.values(strandData?.challengeItems || {}).filter((v) => v !== null).length +
-    Object.values(strandData?.capacityItems || {}).filter((v) => v !== null).length
+  let completedItems = 0
+  for (const item of strand.challengeItems) {
+    const v = strandData?.challengeItems?.[item.id]
+    if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3) completedItems++
+  }
+  for (const item of strand.capacityItems) {
+    const v = strandData?.capacityItems?.[item.id]
+    if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 2) completedItems++
+  }
+  strand.capacityGroups?.forEach((group) => {
+    for (const item of group.items) {
+      const v = strandData?.capacityItems?.[item.id]
+      if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 2) completedItems++
+    }
+  })
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
 
   return (

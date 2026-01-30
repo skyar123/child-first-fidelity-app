@@ -99,36 +99,45 @@ function calculateCaseIdProgress(formValues: FormData): number {
   return Math.round((filled.length / fields.length) * 100)
 }
 
+// Only count as "completed" when value is a valid rating (not empty string or undefined)
+const isValidChallengeRating = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3
+const isValidCapacityRating = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 2
+
 function calculateFidelityProgress(formValues: FormData): number {
   let totalItems = 0
   let completedItems = 0
 
-  // Use the actual data configuration to count total items
+  // Use the actual data configuration to count total items (single source of truth)
   for (const strandConfig of fidelityStrands) {
     const strandData = formValues.fidelityStrands[strandConfig.id as keyof typeof formValues.fidelityStrands]
 
-    // Count challenge items
+    // Challenge items: only count when value is 0, 1, 2, or 3
     totalItems += strandConfig.challengeItems.length
     for (const item of strandConfig.challengeItems) {
-      if (strandData?.challengeItems?.[item.id] !== null && strandData?.challengeItems?.[item.id] !== undefined) {
+      const value = strandData?.challengeItems?.[item.id]
+      if (isValidChallengeRating(value)) {
         completedItems++
       }
     }
 
-    // Count ungrouped capacity items
+    // Ungrouped capacity items: only count when value is 0, 1, or 2
     totalItems += strandConfig.capacityItems.length
     for (const item of strandConfig.capacityItems) {
-      if (strandData?.capacityItems?.[item.id] !== null && strandData?.capacityItems?.[item.id] !== undefined) {
+      const value = strandData?.capacityItems?.[item.id]
+      if (isValidCapacityRating(value)) {
         completedItems++
       }
     }
 
-    // Count grouped capacity items
+    // Grouped capacity items
     if (strandConfig.capacityGroups) {
       for (const group of strandConfig.capacityGroups) {
         totalItems += group.items.length
         for (const item of group.items) {
-          if (strandData?.capacityItems?.[item.id] !== null && strandData?.capacityItems?.[item.id] !== undefined) {
+          const value = strandData?.capacityItems?.[item.id]
+          if (isValidCapacityRating(value)) {
             completedItems++
           }
         }
@@ -150,7 +159,8 @@ function calculateAssessmentProgress(formValues: FormData): number {
       if (isItemVisible(item, formValues as unknown as Record<string, unknown>)) {
         totalItems++
         const itemData = formValues.assessmentChecklist.items[item.id]
-        if (itemData?.done) {
+        // Only count when explicitly done (strict boolean check)
+        if (itemData && typeof itemData.done === 'boolean' && itemData.done === true) {
           completedItems++
         }
       }
@@ -168,7 +178,8 @@ function calculateTraumaFeedbackProgress(formValues: FormData): number {
     totalItems += section.items.length
     for (const item of section.items) {
       const rating = formValues.traumaFeedback.items[item.id]
-      if (rating !== null && rating !== undefined) {
+      // Only count valid numeric ratings (1-5 scale typically)
+      if (typeof rating === 'number' && Number.isInteger(rating) && rating > 0) {
         completedItems++
       }
     }

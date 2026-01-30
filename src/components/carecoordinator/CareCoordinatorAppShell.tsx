@@ -6,6 +6,7 @@ import {
   careCoordinatorSections,
   type CareCoordinatorItem,
 } from '@/data/careCoordinatorItems'
+import { generateCareCoordinatorPDF } from '@/utils/pdfExportCareCoordinator'
 
 // Form data types for standalone CC form
 interface CCFormData {
@@ -125,6 +126,10 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
   }, [formValues])
 
   const progress = calculateProgress()
+
+  const handleExportPDF = useCallback(() => {
+    generateCareCoordinatorPDF(methods.getValues())
+  }, [methods])
 
   const renderContent = () => {
     if (currentSection === 'identification') {
@@ -268,7 +273,10 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all shadow-lg shadow-cyan-500/25">
+              <button
+                onClick={handleExportPDF}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all shadow-lg shadow-cyan-500/25"
+              >
                 <Download className="w-4 h-4" />
                 Export PDF
               </button>

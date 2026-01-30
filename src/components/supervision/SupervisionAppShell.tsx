@@ -4,6 +4,7 @@ import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
 import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
 import { ProgressBar } from '@/components/ui'
+import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
 
 // Section components
 import { SupervisionIdentificationSection } from './sections/SupervisionIdentificationSection'
@@ -97,6 +98,11 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
 
   const progress = calculateProgress()
 
+  const handleExportPDF = useCallback(() => {
+    const data = methods.getValues()
+    generateSupervisionPDF(data)
+  }, [methods])
+
   const renderSection = () => {
     switch (currentSection) {
       case 'identification':
@@ -156,6 +162,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
 
             <div className="flex items-center gap-2">
               <button
+                onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
               >
                 <Download className="w-4 h-4" />
