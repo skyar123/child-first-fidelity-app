@@ -1,0 +1,366 @@
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
+import { useForm, FormProvider, type UseFormReturn } from 'react-hook-form'
+import { storage } from '@/utils/storage'
+import { createDefaultFormData } from '@/data/formSchema'
+import { useFormPersistence } from '@/hooks/useFormPersistence'
+import { fidelityStrands } from '@/data/fidelityItems'
+import { assessmentSections, isItemVisible } from '@/data/assessmentItems'
+import { traumaFeedbackSections } from '@/data/traumaFeedbackItems'
+import { homeVisitSections } from '@/data/homeVisitItems'
+import { cppObjectives } from '@/data/cppObjectives'
+import { careCoordinatorSections } from '@/data/careCoordinatorItems'
+import type { FormData, Progress, SectionProgress, CareCoordinatorItemValue } from '@/types/form.types'
+
+// ========================================
+// Context Types
+// ========================================
+
+interface FormStateContextValue {
+  caseId: string | null
+  progress: Progress
+  isSaving: boolean
+  lastSaved: number | null
+  hasUnsavedChanges: boolean
+  forceSave: () => void
+}
+
+interface FormProviderWrapperProps {
+  children: ReactNode
+  caseId: string | null
+}
+
+// ========================================
+// Context
+// ========================================
+
+const FormStateContext = createContext<FormStateContextValue | null>(null)
+
+// ========================================
+// Progress Calculation
+// ========================================
+
+function calculateProgress(formValues: FormData): Progress {
+  const sections: SectionProgress = {
+    caseIdentification: calculateCaseIdProgress(formValues),
+    fidelityStrands: calculateFidelityProgress(formValues),
+    contactLog: formValues.contactLog.length > 0 ? 100 : 0,
+    assessmentChecklist: calculateAssessmentProgress(formValues),
+    traumaFeedback: calculateTraumaFeedbackProgress(formValues),
+    formulationPlanning: calculateFormulationProgress(formValues),
+    homeVisitChecklists: calculateHomeVisitProgress(formValues),
+    cppObjectives: calculateCppObjectivesProgress(formValues),
+    careCoordinator: calculateCareCoordinatorProgress(formValues),
+  }
+
+  // Calculate overall (weighted average)
+  const weights = {
+    caseIdentification: 10,
+    fidelityStrands: 20,
+    contactLog: 5,
+    assessmentChecklist: 20,
+    traumaFeedback: 10,
+    formulationPlanning: 10,
+    homeVisitChecklists: 10,
+    cppObjectives: 15,
+    careCoordinator: 15,
+  }
+
+  let totalWeight = 0
+  let weightedSum = 0
+  for (const [key, weight] of Object.entries(weights)) {
+    totalWeight += weight
+    weightedSum += sections[key as keyof SectionProgress] * weight
+  }
+
+  const overall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0
+
+  return { sections, overall }
+}
+
+function calculateCaseIdProgress(formValues: FormData): number {
+  const fields = [
+    formValues.caseIdentification.clinicalTeamNames,
+    formValues.caseIdentification.clientInitials,
+    formValues.caseIdentification.date,
+    formValues.caseIdentification.referralSource,
+    formValues.targetChild.ageInMonths,
+    formValues.targetChild.gender,
+    formValues.targetChild.primaryLanguage,
+  ]
+
+  const filled = fields.filter((f) => f !== '' && f !== null && f !== undefined)
+  return Math.round((filled.length / fields.length) * 100)
+}
+
+function calculateFidelityProgress(formValues: FormData): number {
+  let totalItems = 0
+  let completedItems = 0
+
+  // Use the actual data configuration to count total items
+  for (const strandConfig of fidelityStrands) {
+    const strandData = formValues.fidelityStrands[strandConfig.id as keyof typeof formValues.fidelityStrands]
+
+    // Count challenge items
+    totalItems += strandConfig.challengeItems.length
+    for (const item of strandConfig.challengeItems) {
+      if (strandData?.challengeItems?.[item.id] !== null && strandData?.challengeItems?.[item.id] !== undefined) {
+        completedItems++
+      }
+    }
+
+    // Count ungrouped capacity items
+    totalItems += strandConfig.capacityItems.length
+    for (const item of strandConfig.capacityItems) {
+      if (strandData?.capacityItems?.[item.id] !== null && strandData?.capacityItems?.[item.id] !== undefined) {
+        completedItems++
+      }
+    }
+
+    // Count grouped capacity items
+    if (strandConfig.capacityGroups) {
+      for (const group of strandConfig.capacityGroups) {
+        totalItems += group.items.length
+        for (const item of group.items) {
+          if (strandData?.capacityItems?.[item.id] !== null && strandData?.capacityItems?.[item.id] !== undefined) {
+            completedItems++
+          }
+        }
+      }
+    }
+  }
+
+  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+}
+
+function calculateAssessmentProgress(formValues: FormData): number {
+  let totalItems = 0
+  let completedItems = 0
+
+  // Use the actual assessment sections config
+  for (const section of assessmentSections) {
+    for (const item of section.items) {
+      // Check if item is visible based on conditional logic
+      if (isItemVisible(item, formValues as unknown as Record<string, unknown>)) {
+        totalItems++
+        const itemData = formValues.assessmentChecklist.items[item.id]
+        if (itemData?.done) {
+          completedItems++
+        }
+      }
+    }
+  }
+
+  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+}
+
+function calculateTraumaFeedbackProgress(formValues: FormData): number {
+  let totalItems = 0
+  let completedItems = 0
+
+  for (const section of traumaFeedbackSections) {
+    totalItems += section.items.length
+    for (const item of section.items) {
+      const rating = formValues.traumaFeedback.items[item.id]
+      if (rating !== null && rating !== undefined) {
+        completedItems++
+      }
+    }
+  }
+
+  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+}
+
+function calculateFormulationProgress(formValues: FormData): number {
+  const fields = [
+    formValues.formulation.presentingProblems,
+    formValues.formulation.traumaHistory,
+    formValues.formulation.developmentalHistory,
+    formValues.formulation.familyContext,
+    formValues.formulation.strengths,
+    formValues.formulation.treatmentGoals,
+    formValues.formulation.interventionPlan,
+  ]
+
+  const filled = fields.filter((f) => f !== '' && f !== null && f !== undefined)
+  return Math.round((filled.length / fields.length) * 100)
+}
+
+function calculateHomeVisitProgress(formValues: FormData): number {
+  let totalItems = 0
+  let completedItems = 0
+
+  for (const section of homeVisitSections) {
+    totalItems += section.items.length
+    for (const item of section.items) {
+      if (formValues.homeVisit[section.id]?.[item.id]) {
+        completedItems++
+      }
+    }
+  }
+
+  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+}
+
+function calculateCppObjectivesProgress(formValues: FormData): number {
+  const objectivesData = formValues.cppObjectives.objectives
+  const totalObjectives = cppObjectives.length
+  let completedObjectives = 0
+
+  for (const objective of cppObjectives) {
+    const objData = objectivesData[objective.id]
+    // An objective is considered complete if clinicalFocus is set
+    if (objData?.clinicalFocus !== null && objData?.clinicalFocus !== undefined) {
+      completedObjectives++
+    }
+  }
+
+  return Math.round((completedObjectives / totalObjectives) * 100)
+}
+
+function calculateCareCoordinatorProgress(formValues: FormData): number {
+  const items = formValues.careCoordinator?.items || {}
+  
+  // Count total items from the actual data configuration, not from stored data
+  let totalItems = 0
+  let completedItems = 0
+  
+  for (const section of careCoordinatorSections) {
+    for (const item of section.items) {
+      if (item.type === 'checkbox') {
+        totalItems++
+        const itemData = items[item.id] as CareCoordinatorItemValue | undefined
+        if (itemData?.done || itemData?.na) {
+          completedItems++
+        }
+      } else if (item.type === 'multi-checkbox' && item.subItems) {
+        for (const subItem of item.subItems) {
+          totalItems++
+          const itemData = items[item.id] as CareCoordinatorItemValue | undefined
+          if (itemData?.subItems?.[subItem.id]) {
+            completedItems++
+          }
+        }
+      } else if (item.type === 'assessment-tracking' && item.assessmentTrackingItems) {
+        for (const trackingItem of item.assessmentTrackingItems) {
+          totalItems++
+          const itemData = items[item.id] as CareCoordinatorItemValue | undefined
+          const tracking = itemData?.assessmentTracking?.[trackingItem.id]
+          if (tracking?.completed || tracking?.entered) {
+            completedItems++
+          }
+        }
+      }
+    }
+  }
+  
+  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+}
+
+// ========================================
+// Provider Component
+// ========================================
+
+export function CPPFormProvider({
+  children,
+  caseId,
+}: FormProviderWrapperProps) {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Load initial data from storage or create defaults
+  const getInitialData = useCallback((): FormData => {
+    if (caseId) {
+      const savedData = storage.getCase(caseId)
+      if (savedData) {
+        return savedData
+      }
+    }
+    return createDefaultFormData(caseId || undefined)
+  }, [caseId])
+
+  // Initialize form with react-hook-form
+  const methods: UseFormReturn<FormData> = useForm<FormData>({
+    defaultValues: getInitialData(),
+    mode: 'onChange',
+  })
+
+  const { watch, reset, getValues } = methods
+  const formValues = watch()
+
+  // Reset form when case changes
+  useEffect(() => {
+    setIsLoaded(false)
+    const data = getInitialData()
+    reset(data)
+    setIsLoaded(true)
+  }, [caseId, getInitialData, reset])
+
+  // Auto-save with persistence hook
+  const { isSaving, lastSaved, forceSave, hasUnsavedChanges } =
+    useFormPersistence(isLoaded ? formValues : null, caseId)
+
+  // Calculate progress
+  const [progress, setProgress] = useState<Progress>({
+    sections: {
+      caseIdentification: 0,
+      fidelityStrands: 0,
+      contactLog: 0,
+      assessmentChecklist: 0,
+      traumaFeedback: 0,
+      formulationPlanning: 0,
+      homeVisitChecklists: 0,
+      cppObjectives: 0,
+      careCoordinator: 0,
+    },
+    overall: 0,
+  })
+
+  // Update progress when form values change
+  useEffect(() => {
+    if (isLoaded) {
+      const newProgress = calculateProgress(getValues())
+      setProgress(newProgress)
+    }
+  }, [formValues, isLoaded, getValues])
+
+  const contextValue: FormStateContextValue = {
+    caseId,
+    progress,
+    isSaving,
+    lastSaved,
+    hasUnsavedChanges,
+    forceSave,
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-gray-500">Loading...</div>
+      </div>
+    )
+  }
+
+  return (
+    <FormStateContext.Provider value={contextValue}>
+      <FormProvider {...methods}>{children}</FormProvider>
+    </FormStateContext.Provider>
+  )
+}
+
+// ========================================
+// Hook
+// ========================================
+
+export function useFormState(): FormStateContextValue {
+  const context = useContext(FormStateContext)
+  if (!context) {
+    throw new Error('useFormState must be used within a CPPFormProvider')
+  }
+  return context
+}
