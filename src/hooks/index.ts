@@ -1,3 +1,5 @@
 export { useDebounce } from './useDebounce'
 export { useFormPersistence } from './useFormPersistence'
 export { useCaseManager } from './useCaseManager'
+export { useOnlineStatus } from './useOnlineStatus'
+export { useKeyboardShortcuts, useSectionNavigation } from './useKeyboardShortcuts'

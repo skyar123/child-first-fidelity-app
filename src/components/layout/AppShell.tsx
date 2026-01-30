@@ -4,10 +4,24 @@ import { Header } from './Header'
 import { Navigation, type SectionId } from './Navigation'
 import { CaseSelector } from './CaseSelector'
 import { CPPFormProvider } from '@/context/FormContext'
-import { useCaseManager } from '@/hooks/useCaseManager'
+import { useCaseManager, useSectionNavigation } from '@/hooks'
 import { useFormContext } from 'react-hook-form'
 import type { FormData } from '@/types/form.types'
 import { generatePDF } from '@/utils/pdfExport'
+
+// Section IDs in order for navigation
+const SECTION_ORDER: SectionId[] = [
+  'demographics',
+  'fidelity',
+  'contactLog',
+  'assessment',
+  'careCoordinator',
+  'feedback',
+  'formulation',
+  'planOfCare',
+  'homeVisit',
+  'cppObjectives',
+]
 
 interface AppShellProps {
   onBack?: () => void
@@ -76,6 +90,14 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
   const { watch } = useFormContext<FormData>()
   const clientInitials = watch('caseIdentification.clientInitials')
+
+  // Keyboard navigation for sections
+  const currentSectionIndex = SECTION_ORDER.indexOf(currentSection)
+  useSectionNavigation(
+    SECTION_ORDER,
+    currentSectionIndex,
+    (index) => setCurrentSection(SECTION_ORDER[index])
+  )
 
   const handleNewCase = useCallback(() => {
     createCase()

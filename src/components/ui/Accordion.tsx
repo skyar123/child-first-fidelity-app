@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, type ReactNode } from 'react'
+import { useState, createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 // ========================================
@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react'
 interface AccordionGroupContextValue {
   openItems: Set<string>
   toggleItem: (id: string) => void
+  registerDefaultOpen: (id: string) => void
   allowMultiple: boolean
 }
 
@@ -49,9 +50,19 @@ export function AccordionGroup({
     })
   }
 
+  // Allow children to register themselves as default open
+  const registerDefaultOpen = (id: string) => {
+    setOpenItems((prev) => {
+      if (prev.has(id)) return prev
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+  }
+
   return (
     <AccordionGroupContext.Provider
-      value={{ openItems, toggleItem, allowMultiple }}
+      value={{ openItems, toggleItem, registerDefaultOpen, allowMultiple }}
     >
       <div className="space-y-3">{children}</div>
     </AccordionGroupContext.Provider>
@@ -79,9 +90,18 @@ export function AccordionItem({
 }: AccordionItemProps) {
   const groupContext = useContext(AccordionGroupContext)
   const itemId = id || title
+  const hasRegistered = useRef(false)
 
   // Standalone mode (no group context)
   const [standaloneOpen, setStandaloneOpen] = useState(defaultOpen)
+
+  // Register as default open with group context
+  useEffect(() => {
+    if (groupContext && defaultOpen && !hasRegistered.current) {
+      hasRegistered.current = true
+      groupContext.registerDefaultOpen(itemId)
+    }
+  }, [groupContext, defaultOpen, itemId])
 
   const isOpen = groupContext
     ? groupContext.openItems.has(itemId)

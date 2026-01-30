@@ -9,7 +9,12 @@
       "Bash(npx tsc:*)",
       "Bash(fold:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Child First Fidelity App\n\nMulti-form clinical assessment application featuring:\n- Foundational Phase Fidelity \\(CPP/CF integrated\\)\n- Supervision Fidelity tracking\n- Care Coordinator Interventions\n- Vibrant glassmorphism UI with animated gradients\n- PWA with offline support\n- Local storage persistence\n- PDF export capability\n\nBuilt with React 18, TypeScript, Vite, and Tailwind CSS v4.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh repo create:*)",
+      "Bash(netlify sites:create:*)",
+      "Bash(npx netlify login:*)",
+      "Bash(npx netlify:*)"
     ]
   }
 }
