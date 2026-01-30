@@ -3,6 +3,7 @@ import {
   useContext,
   useCallback,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from 'react'
@@ -81,7 +82,22 @@ function calculateProgress(formValues: FormData): Progress {
 
   const overall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0
 
-  return { sections, overall }
+  // Clamp all section values and overall to 0–100 (guard against NaN/overflow)
+  const clamp = (n: number) => Math.min(100, Math.max(0, Number.isFinite(n) ? n : 0))
+  return {
+    sections: {
+      caseIdentification: clamp(sections.caseIdentification),
+      fidelityStrands: clamp(sections.fidelityStrands),
+      contactLog: clamp(sections.contactLog),
+      assessmentChecklist: clamp(sections.assessmentChecklist),
+      traumaFeedback: clamp(sections.traumaFeedback),
+      formulationPlanning: clamp(sections.formulationPlanning),
+      homeVisitChecklists: clamp(sections.homeVisitChecklists),
+      cppObjectives: clamp(sections.cppObjectives),
+      careCoordinator: clamp(sections.careCoordinator),
+    },
+    overall: clamp(overall),
+  }
 }
 
 function calculateCaseIdProgress(formValues: FormData): number {
@@ -109,9 +125,14 @@ function calculateFidelityProgress(formValues: FormData): number {
   let totalItems = 0
   let completedItems = 0
 
+  const fidelityData = formValues.fidelityStrands
+  if (!fidelityData || typeof fidelityData !== 'object') {
+    return 0
+  }
+
   // Use the actual data configuration to count total items (single source of truth)
   for (const strandConfig of fidelityStrands) {
-    const strandData = formValues.fidelityStrands[strandConfig.id as keyof typeof formValues.fidelityStrands]
+    const strandData = fidelityData[strandConfig.id as keyof typeof fidelityData]
 
     // Challenge items: only count when value is 0, 1, 2, or 3
     totalItems += strandConfig.challengeItems.length
@@ -152,13 +173,17 @@ function calculateAssessmentProgress(formValues: FormData): number {
   let totalItems = 0
   let completedItems = 0
 
+  const checklist = formValues.assessmentChecklist
+  const checklistItems = checklist?.items
+  if (!checklistItems || typeof checklistItems !== 'object') return 0
+
   // Use the actual assessment sections config
   for (const section of assessmentSections) {
     for (const item of section.items) {
       // Check if item is visible based on conditional logic
       if (isItemVisible(item, formValues as unknown as Record<string, unknown>)) {
         totalItems++
-        const itemData = formValues.assessmentChecklist.items[item.id]
+        const itemData = checklistItems[item.id]
         // Only count when explicitly done (strict boolean check)
         if (itemData && typeof itemData.done === 'boolean' && itemData.done === true) {
           completedItems++
@@ -174,12 +199,15 @@ function calculateTraumaFeedbackProgress(formValues: FormData): number {
   let totalItems = 0
   let completedItems = 0
 
+  const items = formValues.traumaFeedback?.items
+  if (!items || typeof items !== 'object') return 0
+
   for (const section of traumaFeedbackSections) {
     totalItems += section.items.length
     for (const item of section.items) {
-      const rating = formValues.traumaFeedback.items[item.id]
-      // Only count valid numeric ratings (1-5 scale typically)
-      if (typeof rating === 'number' && Number.isInteger(rating) && rating > 0) {
+      const rating = items[item.id]
+      // Count when user has selected a rating (number, typically 0–5 scale)
+      if (typeof rating === 'number' && Number.isInteger(rating)) {
         completedItems++
       }
     }
@@ -210,7 +238,8 @@ function calculateHomeVisitProgress(formValues: FormData): number {
   for (const section of homeVisitSections) {
     totalItems += section.items.length
     for (const item of section.items) {
-      if (formValues.homeVisit[section.id]?.[item.id]) {
+      const checked = formValues.homeVisit[section.id]?.[item.id]
+      if (checked === true) {
         completedItems++
       }
     }
@@ -222,12 +251,14 @@ function calculateHomeVisitProgress(formValues: FormData): number {
 function calculateCppObjectivesProgress(formValues: FormData): number {
   const objectivesData = formValues.cppObjectives.objectives
   const totalObjectives = cppObjectives.length
+  if (totalObjectives === 0) return 0
   let completedObjectives = 0
 
   for (const objective of cppObjectives) {
     const objData = objectivesData[objective.id]
-    // An objective is considered complete if clinicalFocus is set
-    if (objData?.clinicalFocus !== null && objData?.clinicalFocus !== undefined) {
+    // Only count when clinicalFocus is a valid rating (0, 1, 2, or 3)
+    const v = objData?.clinicalFocus
+    if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 3) {
       completedObjectives++
     }
   }
@@ -316,29 +347,26 @@ export function CPPFormProvider({
   const { isSaving, lastSaved, forceSave, hasUnsavedChanges } =
     useFormPersistence(isLoaded ? formValues : null, caseId)
 
-  // Calculate progress
-  const [progress, setProgress] = useState<Progress>({
-    sections: {
-      caseIdentification: 0,
-      fidelityStrands: 0,
-      contactLog: 0,
-      assessmentChecklist: 0,
-      traumaFeedback: 0,
-      formulationPlanning: 0,
-      homeVisitChecklists: 0,
-      cppObjectives: 0,
-      careCoordinator: 0,
-    },
-    overall: 0,
-  })
-
-  // Update progress when form values change
-  useEffect(() => {
-    if (isLoaded) {
-      const newProgress = calculateProgress(getValues())
-      setProgress(newProgress)
+  // Calculate progress synchronously from current form values (no effect = no stale state)
+  const progress = useMemo((): Progress => {
+    if (!isLoaded) {
+      return {
+        sections: {
+          caseIdentification: 0,
+          fidelityStrands: 0,
+          contactLog: 0,
+          assessmentChecklist: 0,
+          traumaFeedback: 0,
+          formulationPlanning: 0,
+          homeVisitChecklists: 0,
+          cppObjectives: 0,
+          careCoordinator: 0,
+        },
+        overall: 0,
+      }
     }
-  }, [formValues, isLoaded, getValues])
+    return calculateProgress(formValues)
+  }, [isLoaded, formValues])
 
   const contextValue: FormStateContextValue = {
     caseId,
