@@ -13,6 +13,7 @@ import type {
   CPPObjectives,
   CPPObjective,
   CareCoordinator,
+  ProgramFidelity,
 } from '@/types/form.types'
 
 // ========================================
@@ -123,6 +124,13 @@ export const defaultCareCoordinator: CareCoordinator = {
   items: {},
 }
 
+export const defaultProgramFidelity: ProgramFidelity = {
+  affiliateSiteName: '',
+  dateCompleted: '',
+  ratings: {},
+  comments: {},
+}
+
 // ========================================
 // Complete Default Form State
 // ========================================
@@ -153,6 +161,8 @@ export const createDefaultFormData = (caseId?: string): FormData => ({
   cppObjectives: {},
 
   careCoordinator: { ...defaultCareCoordinator, items: {} },
+
+  programFidelity: { ...defaultProgramFidelity, ratings: {}, comments: {} },
 })
 
 // ========================================

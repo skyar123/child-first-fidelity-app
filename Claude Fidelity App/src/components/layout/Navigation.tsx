@@ -12,6 +12,7 @@ export type SectionId =
   | 'homeVisit'
   | 'cppObjectives'
   | 'careCoordinator'
+  | 'programFidelity'
 
 interface Section {
   id: SectionId
@@ -32,6 +33,7 @@ const progressKeyMap = {
   homeVisit: 'homeVisitChecklists',
   cppObjectives: 'cppObjectives',
   careCoordinator: 'careCoordinator',
+  programFidelity: 'programFidelity',
 } as const
 
 const sections: Section[] = [
@@ -95,6 +97,12 @@ const sections: Section[] = [
     label: 'CPP Case Conceptualization',
     shortLabel: 'CPP Objectives',
     progressKey: 'cppObjectives',
+  },
+  {
+    id: 'programFidelity',
+    label: 'Program Fidelity Checklist',
+    shortLabel: 'Program Fidelity',
+    progressKey: 'programFidelity',
   },
 ]
 

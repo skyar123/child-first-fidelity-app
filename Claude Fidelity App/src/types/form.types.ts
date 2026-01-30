@@ -226,6 +226,19 @@ export interface CareCoordinator {
 }
 
 // ========================================
+// Program Fidelity Checklist Types
+// ========================================
+
+export type ProgramFidelityRating = 0 | 1 | 2 | 3 | null
+
+export interface ProgramFidelity {
+  affiliateSiteName: string
+  dateCompleted: string
+  ratings: Record<string, ProgramFidelityRating>
+  comments: Record<string, string>
+}
+
+// ========================================
 // Complete Form Data Type
 // ========================================
 
@@ -265,6 +278,9 @@ export interface FormData {
 
   // Care Coordinator Interventions
   careCoordinator: CareCoordinator
+
+  // Program Fidelity Checklist
+  programFidelity: ProgramFidelity
 }
 
 // ========================================
@@ -297,6 +313,7 @@ export interface SectionProgress {
   homeVisitChecklists: number
   cppObjectives: number
   careCoordinator: number
+  programFidelity: number
 }
 
 export interface Progress {

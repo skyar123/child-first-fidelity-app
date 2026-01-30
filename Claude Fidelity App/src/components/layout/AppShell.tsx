@@ -15,6 +15,7 @@ import {
   AssessmentChecklistSection,
   TraumaFeedbackSection,
   CareCoordinatorSection,
+  ProgramFidelitySection,
 } from '@/components/sections'
 
 function SectionPlaceholder({ name }: { name: string }) {
@@ -67,6 +68,8 @@ function MainContent({
       return <SectionPlaceholder name="Home Visit Checklists" />
     case 'cppObjectives':
       return <SectionPlaceholder name="CPP Case Conceptualization" />
+    case 'programFidelity':
+      return <ProgramFidelitySection />
     default:
       return null
   }

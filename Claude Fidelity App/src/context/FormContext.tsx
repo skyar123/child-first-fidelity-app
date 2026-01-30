@@ -11,13 +11,7 @@ import { storage } from '@/utils/storage'
 import { createDefaultFormData } from '@/data/formSchema'
 import { useFormPersistence } from '@/hooks/useFormPersistence'
 import type { FormData, Progress, SectionProgress } from '@/types/form.types'
-import {
-  careCoordinatorSections,
-  type CareCoordinatorItemValue,
-} from '@/data/careCoordinatorItems'
-import { fidelityStrands } from '@/data/fidelityItems'
-import { assessmentSections, isItemVisible, NO_TRAUMA_VALUE } from '@/data/assessmentItems'
-import { traumaFeedbackSections } from '@/data/traumaFeedbackItems'
+import { calculateProgramFidelityProgress } from '@/data/programFidelityItems'
 
 // ========================================
 // Context Types
@@ -59,6 +53,7 @@ function calculateProgress(formValues: FormData): Progress {
     homeVisitChecklists: 0,
     cppObjectives: 0,
     careCoordinator: calculateCareCoordinatorProgress(formValues),
+    programFidelity: calculateProgramFidelityProgress(formValues.programFidelity?.ratings || {}),
   }
 
   // Calculate overall (weighted average - simplified for now)
@@ -161,6 +156,7 @@ export function CPPFormProvider({
       homeVisitChecklists: 0,
       cppObjectives: 0,
       careCoordinator: 0,
+      programFidelity: 0,
     },
     overall: 0,
   })
