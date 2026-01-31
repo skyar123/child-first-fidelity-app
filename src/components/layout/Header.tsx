@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Menu, Plus, Download, FolderOpen, Save, Wifi, WifiOff, Trash2, Sparkles } from 'lucide-react'
+import { Menu, Plus, Download, FolderOpen, Save, Wifi, WifiOff, Trash2, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
 import { useFormState } from '@/context/FormContext'
 import { getProgressMessage } from '@/utils/celebrations'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 interface HeaderProps {
   caseName: string
@@ -22,6 +25,9 @@ export function Header({
 }: HeaderProps) {
   const { progress, isSaving, lastSaved, hasUnsavedChanges, forceSave } = useFormState()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
   const progressMessage = getProgressMessage(progress.overall)
 
   useEffect(() => {
@@ -47,6 +53,7 @@ export function Header({
   }
 
   return (
+    <>
     <header className="sticky top-0 z-40 glass-header border-b border-white/20">
       <div className="flex items-center justify-between px-4 h-14">
         {/* Left side */}
@@ -108,6 +115,34 @@ export function Header({
 
         {/* Right side */}
         <div className="flex items-center gap-1">
+          {/* Grounding Exercise Button */}
+          <button
+            onClick={() => setShowGrounding(true)}
+            className="p-2.5 rounded-xl hover:bg-cyan-50 text-cyan-500 hover:text-cyan-600 transition-all"
+            aria-label="Regulate First - Grounding Exercise"
+            title="Regulate First"
+          >
+            <Heart className="w-5 h-5" />
+          </button>
+          {/* Fidelity Compass Button */}
+          <button
+            onClick={() => setShowCompass(true)}
+            className="p-2.5 rounded-xl hover:bg-green-50 text-green-500 hover:text-green-600 transition-all"
+            aria-label="Fidelity Compass"
+            title="Fidelity Compass"
+          >
+            <Compass className="w-5 h-5" />
+          </button>
+          {/* Reflective Journal Button */}
+          <button
+            onClick={() => setShowJournal(true)}
+            className="p-2.5 rounded-xl hover:bg-purple-50 text-purple-500 hover:text-purple-600 transition-all"
+            aria-label="Reflective Practice Journal"
+            title="Reflective Journal"
+          >
+            <PenLine className="w-5 h-5" />
+          </button>
+          <span className="w-px h-6 bg-gray-200 mx-1" />
           {onClearData && (
             <button
               onClick={onClearData}
@@ -169,5 +204,17 @@ export function Header({
         </div>
       </div>
     </header>
+
+    {/* Modals */}
+    {showGrounding && (
+      <GroundingExercise onClose={() => setShowGrounding(false)} />
+    )}
+    {showCompass && (
+      <FidelityCompass onClose={() => setShowCompass(false)} />
+    )}
+    {showJournal && (
+      <ReflectiveJournal onClose={() => setShowJournal(false)} />
+    )}
+    </>
   )
 }

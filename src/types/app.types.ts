@@ -40,7 +40,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     description: 'End of treatment assessment and documentation',
     color: 'yellow',
     icon: '✅',
-    available: false // Coming soon
+    available: true
   },
   {
     id: 'care_coordinator',
