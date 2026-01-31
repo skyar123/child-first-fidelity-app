@@ -9,6 +9,7 @@ import {
   type ProgramFidelityItem,
   type FidelityRating,
 } from '@/data/programFidelityItems'
+import { generateProgramFidelityPDF } from '@/utils/pdfExportProgramFidelity'
 
 // Form data types for standalone Program Fidelity form
 interface PFFormData {
@@ -83,9 +84,9 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
   const progress = calculateProgramFidelityProgress(formValues.ratings || {})
 
   const handleExportPDF = useCallback(() => {
-    // TODO: Implement PDF export for Program Fidelity
-    alert('PDF export coming soon!')
-  }, [])
+    const data = methods.getValues()
+    generateProgramFidelityPDF(data)
+  }, [methods])
 
   const renderContent = () => {
     if (currentSection === 'identification') {
