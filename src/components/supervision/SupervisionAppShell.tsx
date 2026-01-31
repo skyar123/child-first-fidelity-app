@@ -126,9 +126,9 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-100">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <header className="glass-header sticky top-0 z-40 border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
@@ -190,7 +190,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           {/* Mobile overlay */}
           {navOpen && (
             <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
               onClick={() => setNavOpen(false)}
             />
           )}
@@ -198,13 +198,14 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           {/* Navigation sidebar */}
           <nav
             className={`
-              fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-73px)] w-64 bg-white border-r border-gray-200
+              fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-73px)] w-64
+              bg-white/80 backdrop-blur-md border-r border-white/20
               transform transition-transform duration-200 ease-in-out z-50
               ${navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}
           >
             {/* Mobile header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
+            <div className="flex items-center justify-between p-4 border-b border-white/20 lg:hidden">
               <span className="font-semibold text-gray-900">Sections</span>
               <button
                 onClick={() => setNavOpen(false)}
