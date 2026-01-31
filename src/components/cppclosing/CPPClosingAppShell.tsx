@@ -844,10 +844,13 @@ function ReflectivePracticeSection() {
     setValue(`reflectivePractice.challenges.${id}`, { ...current, [role]: value })
   }
 
-  const updateCapacity = (section: string, id: string, role: 'clinician' | 'ccFrp', value: CapacityLevel) => {
-    const key = `reflectivePractice.${section}.${id}` as any
-    const current = (reflectivePractice as any)[section]?.[id] || { clinician: 'requires_development', ccFrp: 'requires_development' }
-    setValue(key, { ...current, [role]: value })
+  const updateCapacity = (section: keyof typeof reflectivePractice, id: string, role: 'clinician' | 'ccFrp', value: CapacityLevel) => {
+    const sectionData = reflectivePractice[section]
+    const current = (sectionData && typeof sectionData === 'object' && id in sectionData)
+      ? (sectionData as Record<string, { clinician: CapacityLevel; ccFrp: CapacityLevel }>)[id]
+      : { clinician: 'requires_development' as CapacityLevel, ccFrp: 'requires_development' as CapacityLevel }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setValue(`reflectivePractice.${section}.${id}` as any, { ...current, [role]: value })
   }
 
   return (
