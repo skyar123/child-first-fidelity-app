@@ -332,7 +332,7 @@ export function CPPFormProvider({
     mode: 'onChange',
   })
 
-  const { watch, reset, getValues } = methods
+  const { watch, reset } = methods
   const formValues = watch()
 
   // Reset form when case changes
