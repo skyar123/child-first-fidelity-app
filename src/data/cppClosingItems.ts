@@ -31,6 +31,7 @@ export const CLOSING_REASONS: ClosingReason[] = [
   { id: 'scheduling', text: 'Scheduling problems', category: 'family_circumstances' },
   { id: 'unexpected_emergency', text: 'Unexpected emergency', category: 'family_circumstances' },
   // Caregiver Challenges
+  { id: 'caregiver_challenges', text: 'Caregiver challenges', category: 'caregiver_challenges' },
   { id: 'mental_illness', text: 'Mental illness', category: 'caregiver_challenges' },
   { id: 'physical_illness', text: 'Physical illness', category: 'caregiver_challenges' },
   { id: 'drug_treatment', text: 'In drug treatment/residential', category: 'caregiver_challenges' },

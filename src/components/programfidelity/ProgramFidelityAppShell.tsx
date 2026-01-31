@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { ArrowLeft, Menu, Download, X, Building2, ClipboardList } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField } from '@/components/ui'
+import { TextField, ProgressBar } from '@/components/ui'
 import {
   programFidelitySections,
   getSectionProgress,
@@ -243,12 +243,11 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
           {/* Progress bar */}
           <div className="px-4 pb-2">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-white/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+              <ProgressBar
+                value={progress}
+                size="sm"
+                color={progress === 100 ? 'green' : 'purple'}
+              />
               <span className="text-xs font-medium text-gray-600 min-w-[3ch]">
                 {progress}%
               </span>
