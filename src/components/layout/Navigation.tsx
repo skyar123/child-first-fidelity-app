@@ -12,6 +12,7 @@ export type SectionId =
   | 'planOfCare'
   | 'homeVisit'
   | 'cppObjectives'
+  | 'programFidelity'
 
 interface Section {
   id: SectionId
@@ -30,6 +31,7 @@ const sections: Section[] = [
   { id: 'planOfCare', label: 'Plan of Care', shortLabel: 'Plan' },
   { id: 'homeVisit', label: 'Home Visit Checklists', shortLabel: 'Home Visit' },
   { id: 'cppObjectives', label: 'CPP Case Conceptualization', shortLabel: 'CPP' },
+  { id: 'programFidelity', label: 'Program Fidelity Checklist', shortLabel: 'Program Fidelity' },
 ]
 
 interface NavigationProps {
@@ -69,6 +71,8 @@ export function Navigation({
         return progress.sections.homeVisitChecklists
       case 'cppObjectives':
         return progress.sections.cppObjectives
+      case 'programFidelity':
+        return progress.sections.programFidelity
       default:
         return 0
     }

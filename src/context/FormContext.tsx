@@ -17,6 +17,7 @@ import { traumaFeedbackSections } from '@/data/traumaFeedbackItems'
 import { homeVisitSections } from '@/data/homeVisitItems'
 import { cppObjectives } from '@/data/cppObjectives'
 import { careCoordinatorSections } from '@/data/careCoordinatorItems'
+import { calculateProgramFidelityProgress } from '@/data/programFidelityItems'
 import type { FormData, Progress, SectionProgress, CareCoordinatorItemValue } from '@/types/form.types'
 
 // ========================================
@@ -58,6 +59,7 @@ function calculateProgress(formValues: FormData): Progress {
     homeVisitChecklists: calculateHomeVisitProgress(formValues),
     cppObjectives: calculateCppObjectivesProgress(formValues),
     careCoordinator: calculateCareCoordinatorProgress(formValues),
+    programFidelity: calculateProgramFidelityProgress(formValues.programFidelity?.ratings || {}),
   }
 
   // Calculate overall (weighted average)
@@ -71,6 +73,7 @@ function calculateProgress(formValues: FormData): Progress {
     homeVisitChecklists: 10,
     cppObjectives: 15,
     careCoordinator: 15,
+    programFidelity: 15,
   }
 
   let totalWeight = 0
@@ -95,6 +98,7 @@ function calculateProgress(formValues: FormData): Progress {
       homeVisitChecklists: clamp(sections.homeVisitChecklists),
       cppObjectives: clamp(sections.cppObjectives),
       careCoordinator: clamp(sections.careCoordinator),
+      programFidelity: clamp(sections.programFidelity),
     },
     overall: clamp(overall),
   }
@@ -361,6 +365,7 @@ export function CPPFormProvider({
           homeVisitChecklists: 0,
           cppObjectives: 0,
           careCoordinator: 0,
+          programFidelity: 0,
         },
         overall: 0,
       }

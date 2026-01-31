@@ -80,6 +80,12 @@ export function createDefaultFormData(_caseId?: string): FormData {
       date: '',
       items: {},
     },
+    programFidelity: {
+      affiliateSiteName: '',
+      dateCompleted: '',
+      ratings: {},
+      comments: {},
+    },
   }
 }
 
