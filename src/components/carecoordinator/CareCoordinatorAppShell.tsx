@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField } from '@/components/ui'
+import { TextField, ProgressBar } from '@/components/ui'
 import {
   careCoordinatorSections,
   type CareCoordinatorItem,
@@ -286,12 +286,11 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
           {/* Progress bar */}
           <div className="px-4 pb-2">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-white/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+              <ProgressBar
+                value={progress}
+                size="sm"
+                color={progress === 100 ? 'green' : 'cyan'}
+              />
               <span className="text-xs font-medium text-gray-600 min-w-[3ch]">
                 {progress}%
               </span>
