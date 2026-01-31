@@ -58,7 +58,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     description: 'Child First Program Fidelity assessment',
     color: 'purple',
     icon: '📊',
-    available: false // Coming soon
+    available: true
   }
 ]
 
