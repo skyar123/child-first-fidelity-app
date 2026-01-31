@@ -225,7 +225,7 @@ export function FidelityStrandsSection() {
       {/* Intro with Focus Mode button */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="px-4 py-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-b border-white/20">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/30">
                 <Target className="w-5 h-5 text-white" />
@@ -237,11 +237,12 @@ export function FidelityStrandsSection() {
             </div>
             <button
               onClick={() => setFocusMode(true)}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold
+              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold
                        bg-gradient-to-r from-indigo-500 to-purple-500 text-white
                        rounded-xl hover:from-indigo-600 hover:to-purple-600
                        transition-all shadow-lg shadow-indigo-500/30
-                       hover:shadow-indigo-500/50 hover:-translate-y-0.5"
+                       hover:shadow-indigo-500/50 hover:-translate-y-0.5
+                       w-full sm:w-auto"
             >
               <Focus className="w-4 h-4" />
               Focus Mode
