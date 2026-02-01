@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare } from 'lucide-react'
 import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
-import { ProgressBar } from '@/components/ui'
+import { ProgressBar, AllNotesSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
@@ -41,6 +41,7 @@ type SectionId =
   | 'trauma_framework'
   | 'procedural_fidelity'
   | 'cpp_objectives'
+  | 'all_notes'
   | 'notes'
 
 interface Section {
@@ -59,6 +60,7 @@ const sections: Section[] = [
   { id: 'trauma_framework', label: 'Trauma Framework', shortLabel: 'Trauma', icon: Shield },
   { id: 'procedural_fidelity', label: 'Procedural Fidelity', shortLabel: 'Procedural', icon: Link2 },
   { id: 'cpp_objectives', label: 'CPP Objectives', shortLabel: 'Objectives', icon: Target },
+  { id: 'all_notes', label: 'Supervision Notes', shortLabel: 'S-Notes', icon: MessageSquare },
   { id: 'notes', label: 'Notes', shortLabel: 'Notes', icon: FileText }
 ]
 
@@ -1164,6 +1166,21 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
         return <ProceduralFidelitySection />
       case 'cpp_objectives':
         return <CPPObjectivesSection />
+      case 'all_notes':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Supervision Notes</h2>
+              <p className="text-gray-600">All notes added to questions for supervision review</p>
+            </div>
+            <AllNotesSection
+              notes={[]}
+              onNavigateToQuestion={(sectionId, _questionId) => {
+                setCurrentSection(sectionId as SectionId)
+              }}
+            />
+          </div>
+        )
       case 'notes':
         return <NotesSection />
       default:
