@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
 import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
 import { ProgressBar } from '@/components/ui'
 import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 // Section components
 import { SupervisionIdentificationSection } from './sections/SupervisionIdentificationSection'
@@ -47,6 +50,9 @@ interface SupervisionAppShellProps {
 export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<SupervisionFormData>({
     defaultValues: createDefaultSupervisionFormData(),
@@ -160,7 +166,33 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Features */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2 rounded-lg hover:bg-pink-50 text-pink-400 hover:text-pink-500 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
@@ -247,6 +279,17 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           </main>
         </div>
       </div>
+
+      {/* Wellness Modals */}
+      {showGrounding && (
+        <GroundingExercise onClose={() => setShowGrounding(false)} />
+      )}
+      {showCompass && (
+        <FidelityCompass onClose={() => setShowCompass(false)} />
+      )}
+      {showJournal && (
+        <ReflectiveJournal onClose={() => setShowJournal(false)} />
+      )}
     </FormProvider>
   )
 }

@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, ClipboardList, Calendar, Users, Brain, Heart, Link2, Shield, CheckSquare, Target, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, FileText, ClipboardList, Calendar, Users, Brain, Heart, Link2, Shield, CheckSquare, Target, Plus, Trash2, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
 import { ProgressBar } from '@/components/ui'
 import { getRandomQuote } from '@/utils/wisdomQuotes'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 import {
   type CPPClosingFormData,
   type ChallengeLevel,
@@ -1861,6 +1864,9 @@ function NotesSection() {
 export function CPPClosingAppShell({ onBack }: CPPClosingAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<CPPClosingFormData>({
     defaultValues: DEFAULT_CPP_CLOSING_DATA,
@@ -2013,7 +2019,33 @@ export function CPPClosingAppShell({ onBack }: CPPClosingAppShellProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Features */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2 rounded-lg hover:bg-orange-50 text-orange-400 hover:text-orange-500 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors shadow-lg"
@@ -2101,6 +2133,17 @@ export function CPPClosingAppShell({ onBack }: CPPClosingAppShellProps) {
           </main>
         </div>
       </div>
+
+      {/* Wellness Modals */}
+      {showGrounding && (
+        <GroundingExercise onClose={() => setShowGrounding(false)} />
+      )}
+      {showCompass && (
+        <FidelityCompass onClose={() => setShowCompass(false)} />
+      )}
+      {showJournal && (
+        <ReflectiveJournal onClose={() => setShowJournal(false)} />
+      )}
     </FormProvider>
   )
 }
