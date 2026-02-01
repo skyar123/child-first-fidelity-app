@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X, Building2, ClipboardList } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Building2, ClipboardList, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField } from '@/components/ui'
+import { TextField, ProgressBar } from '@/components/ui'
 import {
   programFidelitySections,
   getSectionProgress,
@@ -9,6 +9,10 @@ import {
   type ProgramFidelityItem,
   type FidelityRating,
 } from '@/data/programFidelityItems'
+import { generateProgramFidelityPDF } from '@/utils/pdfExportProgramFidelity'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 // Form data types for standalone Program Fidelity form
 interface PFFormData {
@@ -70,6 +74,9 @@ function createDefaultFormData(): PFFormData {
 export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<PFFormData>({
     defaultValues: createDefaultFormData(),
@@ -83,9 +90,9 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
   const progress = calculateProgramFidelityProgress(formValues.ratings || {})
 
   const handleExportPDF = useCallback(() => {
-    // TODO: Implement PDF export for Program Fidelity
-    alert('PDF export coming soon!')
-  }, [])
+    const data = methods.getValues()
+    generateProgramFidelityPDF(data)
+  }, [methods])
 
   const renderContent = () => {
     if (currentSection === 'identification') {
@@ -228,7 +235,33 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Features */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2 rounded-lg hover:bg-violet-50 text-violet-400 hover:text-violet-500 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all shadow-lg shadow-violet-500/25"
@@ -242,12 +275,11 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
           {/* Progress bar */}
           <div className="px-4 pb-2">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-white/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+              <ProgressBar
+                value={progress}
+                size="sm"
+                color={progress === 100 ? 'green' : 'purple'}
+              />
               <span className="text-xs font-medium text-gray-600 min-w-[3ch]">
                 {progress}%
               </span>
@@ -336,6 +368,17 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
           </main>
         </div>
       </div>
+
+      {/* Wellness Modals */}
+      {showGrounding && (
+        <GroundingExercise onClose={() => setShowGrounding(false)} />
+      )}
+      {showCompass && (
+        <FidelityCompass onClose={() => setShowCompass(false)} />
+      )}
+      {showJournal && (
+        <ReflectiveJournal onClose={() => setShowJournal(false)} />
+      )}
     </FormProvider>
   )
 }
