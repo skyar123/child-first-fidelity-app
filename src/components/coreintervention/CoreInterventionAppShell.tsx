@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles } from 'lucide-react'
 import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
-import { ProgressBar, AllNotesSection } from '@/components/ui'
+import { AllNotesSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
+import { getProgressMessage } from '@/utils/celebrations'
 import {
   type CoreInterventionFormData,
   type ChallengeLevel,
@@ -1188,37 +1189,46 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
     }
   }
 
+  const progressMessage = getProgressMessage(progress)
+
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50">
+      <div className="min-h-screen animated-gradient-bg">
         {/* Header */}
         <header className="sticky top-0 z-40 glass-header border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 -ml-2 rounded-lg hover:bg-white/50"
+                className="p-2 -ml-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Back to form selection"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <button
                 onClick={() => setNavOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-white/50"
+                className="lg:hidden p-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-white text-lg">🎯</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30 float-animation">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-sm font-semibold text-gray-900">
-                    Core Intervention Phase
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-sm font-bold gradient-text truncate max-w-[200px]">
+                      {formValues.identification?.clientInitials || 'Core Intervention'}
+                    </h1>
+                    {progress === 100 && (
+                      <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-medium">
+                        Complete!
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">
-                    {formValues.identification?.clientInitials || 'New Assessment'}
+                    Core Intervention Phase
                   </p>
                 </div>
               </div>
@@ -1228,7 +1238,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
               {/* Wellness Features */}
               <button
                 onClick={() => setShowGrounding(true)}
-                className="p-2 rounded-lg hover:bg-teal-50 text-teal-400 hover:text-teal-500 transition-all"
+                className="p-2.5 rounded-xl hover:bg-cyan-50 text-cyan-500 hover:text-cyan-600 transition-all"
                 aria-label="Regulate First - Grounding Exercise"
                 title="Regulate First"
               >
@@ -1236,7 +1246,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
               </button>
               <button
                 onClick={() => setShowCompass(true)}
-                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                className="p-2.5 rounded-xl hover:bg-green-50 text-green-500 hover:text-green-600 transition-all"
                 aria-label="Fidelity Compass"
                 title="Fidelity Compass"
               >
@@ -1244,7 +1254,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
               </button>
               <button
                 onClick={() => setShowJournal(true)}
-                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                className="p-2.5 rounded-xl hover:bg-purple-50 text-purple-500 hover:text-purple-600 transition-all"
                 aria-label="Reflective Practice Journal"
                 title="Reflective Journal"
               >
@@ -1253,7 +1263,12 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
               <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-sm font-medium rounded-lg hover:from-teal-600 hover:to-cyan-600 transition-colors shadow-lg"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 ml-2
+                         bg-gradient-to-r from-teal-500 to-cyan-500
+                         text-white text-sm font-semibold rounded-xl
+                         hover:from-teal-600 hover:to-cyan-600
+                         transition-all shadow-lg shadow-cyan-500/30
+                         hover:shadow-cyan-500/50 hover:-translate-y-0.5"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
@@ -1262,16 +1277,24 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
           </div>
 
           {/* Progress bar */}
-          <div className="px-4 pb-2">
-            <div className="flex items-center gap-2">
-              <ProgressBar
-                value={progress}
-                size="sm"
-                color={progress === 100 ? 'green' : 'cyan'}
-              />
-              <span className="text-xs text-gray-500 min-w-[3ch]">
-                {progress}%
-              </span>
+          <div className="px-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ease-out rounded-full ${
+                    progress === 100
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 progress-complete'
+                      : 'bg-gradient-to-r from-teal-400 via-cyan-500 to-blue-500'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{progressMessage.emoji}</span>
+                <span className="text-sm font-semibold text-gray-700 min-w-[3ch]">
+                  {progress}%
+                </span>
+              </div>
             </div>
           </div>
         </header>

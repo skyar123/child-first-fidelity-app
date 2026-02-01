@@ -1,9 +1,12 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
 import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
-import { ProgressBar } from '@/components/ui'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
+import { getProgressMessage } from '@/utils/celebrations'
 import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
 
 // Section components
@@ -47,6 +50,9 @@ interface SupervisionAppShellProps {
 export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<SupervisionFormData>({
     defaultValues: createDefaultSupervisionFormData(),
@@ -124,46 +130,86 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
     }
   }
 
+  const progressMessage = getProgressMessage(progress)
+
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-100">
+      <div className="min-h-screen animated-gradient-bg">
         {/* Header */}
         <header className="glass-header sticky top-0 z-40 border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 -ml-2 rounded-lg hover:bg-gray-100"
+                className="p-2 -ml-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Back to form selection"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <button
                 onClick={() => setNavOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SF</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-400 via-rose-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 float-animation">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-sm font-semibold text-gray-900">
-                    Supervision Fidelity
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-sm font-bold gradient-text truncate max-w-[200px]">
+                      {formValues.identification.clinicalTeamNames || 'Supervision Fidelity'}
+                    </h1>
+                    {progress === 100 && (
+                      <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-medium">
+                        Complete!
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">
-                    {formValues.identification.clinicalTeamNames || 'New Assessment'}
+                    Supervision Fidelity Assessment
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Tools */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2.5 rounded-xl hover:bg-cyan-50 text-cyan-500 hover:text-cyan-600 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2.5 rounded-xl hover:bg-green-50 text-green-500 hover:text-green-600 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2.5 rounded-xl hover:bg-purple-50 text-purple-500 hover:text-purple-600 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 ml-2
+                         bg-gradient-to-r from-pink-500 to-rose-500
+                         text-white text-sm font-semibold rounded-xl
+                         hover:from-pink-600 hover:to-rose-600
+                         transition-all shadow-lg shadow-pink-500/30
+                         hover:shadow-pink-500/50 hover:-translate-y-0.5"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
@@ -172,16 +218,24 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           </div>
 
           {/* Progress bar */}
-          <div className="px-4 pb-2">
-            <div className="flex items-center gap-2">
-              <ProgressBar
-                value={progress}
-                size="sm"
-                color={progress === 100 ? 'green' : 'pink'}
-              />
-              <span className="text-xs text-gray-500 min-w-[3ch]">
-                {progress}%
-              </span>
+          <div className="px-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ease-out rounded-full ${
+                    progress === 100
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 progress-complete'
+                      : 'bg-gradient-to-r from-pink-400 via-rose-500 to-fuchsia-500'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{progressMessage.emoji}</span>
+                <span className="text-sm font-semibold text-gray-700 min-w-[3ch]">
+                  {progress}%
+                </span>
+              </div>
             </div>
           </div>
         </header>
@@ -246,6 +300,17 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
             </div>
           </main>
         </div>
+
+        {/* Wellness Modals */}
+        {showGrounding && (
+          <GroundingExercise onClose={() => setShowGrounding(false)} />
+        )}
+        {showCompass && (
+          <FidelityCompass onClose={() => setShowCompass(false)} />
+        )}
+        {showJournal && (
+          <ReflectiveJournal onClose={() => setShowJournal(false)} />
+        )}
       </div>
     </FormProvider>
   )
