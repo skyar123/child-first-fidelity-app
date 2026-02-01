@@ -9,6 +9,7 @@ import {
   type CapacityLevel,
   type AttendanceStatus,
   type ContactLogEntry,
+  type Attendee,
   DEFAULT_CPP_CLOSING_DATA,
   CLOSING_REASONS,
   PLANNED_TERMINATION_ITEMS,
@@ -17,6 +18,7 @@ import {
   SESSION_STATUS_OPTIONS,
   NOT_ATTENDING_REASONS,
   LOCATION_OPTIONS,
+  ATTENDEE_OPTIONS,
   REFLECTIVE_PRACTICE_CHALLENGES,
   CAPACITY_CONTEXTS,
   EXTERNAL_SUPPORT_ITEMS,
@@ -603,11 +605,13 @@ function UnplannedTerminationSection() {
 // Contact Log Section
 // ========================================
 function ContactLogSection() {
-  const { control, register } = useFormContext<CPPClosingFormData>()
+  const { control, register, watch, setValue } = useFormContext<CPPClosingFormData>()
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'contactLog'
   })
+
+  const contactLog = watch('contactLog')
 
   const addEntry = () => {
     append({
@@ -622,6 +626,14 @@ function ContactLogSection() {
       location: '',
       sessionCounter: ''
     } as ContactLogEntry)
+  }
+
+  const toggleAttendee = (index: number, attendee: Attendee) => {
+    const currentAttendees = contactLog[index]?.attendees || []
+    const newAttendees = currentAttendees.includes(attendee)
+      ? currentAttendees.filter((a: Attendee) => a !== attendee)
+      : [...currentAttendees, attendee]
+    setValue(`contactLog.${index}.attendees`, newAttendees)
   }
 
   return (
@@ -733,6 +745,40 @@ function ContactLogSection() {
                       placeholder="e.g., 24"
                     />
                   </div>
+                </div>
+
+                {/* Who Attended Multi-Select */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Who Attended (check all that apply)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {ATTENDEE_OPTIONS.map((attendee) => {
+                      const isSelected = contactLog[index]?.attendees?.includes(attendee.value) || false
+                      return (
+                        <button
+                          key={attendee.value}
+                          type="button"
+                          onClick={() => toggleAttendee(index, attendee.value)}
+                          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                            isSelected
+                              ? 'bg-orange-100 border-orange-400 text-orange-700'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {attendee.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {/* Collateral Specify Field */}
+                  {contactLog[index]?.attendees?.includes('collateral') && (
+                    <div className="mt-2">
+                      <input
+                        {...register(`contactLog.${index}.collateralSpecify`)}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        placeholder="Specify collateral..."
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -1527,6 +1573,82 @@ function ProceduralFidelitySection() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      {/* Propose Caregiver Collateral Sessions */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="font-semibold text-gray-900 mb-2">Propose Caregiver Collateral Sessions</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Propose caregiver collateral sessions when:
+        </p>
+        <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+          <li>Caregiver is triggered by child or child's play or in need of psychoeducation</li>
+          <li>Caregiver does not understand trauma as a potential cause of child's behaviors</li>
+          <li>Caregiver needs to share information with Clinician/Care Coordinator (e.g., new traumatic events, new service needs)</li>
+        </ul>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-700 mb-2 font-medium">Propose caregiver collateral sessions</p>
+          <div className="flex flex-wrap gap-4">
+            <div>
+              <span className="text-xs text-blue-600 font-medium">Clinician:</span>
+              <div className="flex gap-1 mt-1">
+                {[
+                  { value: 'not_needed', label: 'Not needed' },
+                  { value: 'no', label: 'No' },
+                  { value: 'yes_irregular', label: 'Yes/Irreg' },
+                  { value: 'yes_attended', label: 'Yes' }
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setValue('proceduralFidelity.collateralSessions', {
+                        ...proceduralFidelity.collateralSessions,
+                        clinician: opt.value as AttendanceStatus
+                      })
+                    }}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      proceduralFidelity.collateralSessions?.clinician === opt.value
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="text-xs text-purple-600 font-medium">CC/FRP:</span>
+              <div className="flex gap-1 mt-1">
+                {[
+                  { value: 'not_needed', label: 'Not needed' },
+                  { value: 'no', label: 'No' },
+                  { value: 'yes_irregular', label: 'Yes/Irreg' },
+                  { value: 'yes_attended', label: 'Yes' }
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setValue('proceduralFidelity.collateralSessions', {
+                        ...proceduralFidelity.collateralSessions,
+                        ccFrp: opt.value as AttendanceStatus
+                      })
+                    }}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      proceduralFidelity.collateralSessions?.ccFrp === opt.value
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
