@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
 import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
 import { ProgressBar } from '@/components/ui'
 import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 // Section components
 import { SupervisionIdentificationSection } from './sections/SupervisionIdentificationSection'
@@ -47,6 +50,9 @@ interface SupervisionAppShellProps {
 export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<SupervisionFormData>({
     defaultValues: createDefaultSupervisionFormData(),
@@ -126,9 +132,9 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-100">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <header className="glass-header sticky top-0 z-40 border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
@@ -160,7 +166,33 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Features */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2 rounded-lg hover:bg-pink-50 text-pink-400 hover:text-pink-500 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
@@ -190,7 +222,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           {/* Mobile overlay */}
           {navOpen && (
             <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
               onClick={() => setNavOpen(false)}
             />
           )}
@@ -198,13 +230,14 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           {/* Navigation sidebar */}
           <nav
             className={`
-              fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-73px)] w-64 bg-white border-r border-gray-200
+              fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-73px)] w-64
+              bg-white/80 backdrop-blur-md border-r border-white/20
               transform transition-transform duration-200 ease-in-out z-50
               ${navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}
           >
             {/* Mobile header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
+            <div className="flex items-center justify-between p-4 border-b border-white/20 lg:hidden">
               <span className="font-semibold text-gray-900">Sections</span>
               <button
                 onClick={() => setNavOpen(false)}
@@ -246,6 +279,17 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           </main>
         </div>
       </div>
+
+      {/* Wellness Modals */}
+      {showGrounding && (
+        <GroundingExercise onClose={() => setShowGrounding(false)} />
+      )}
+      {showCompass && (
+        <FidelityCompass onClose={() => setShowCompass(false)} />
+      )}
+      {showJournal && (
+        <ReflectiveJournal onClose={() => setShowJournal(false)} />
+      )}
     </FormProvider>
   )
 }

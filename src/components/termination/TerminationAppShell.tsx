@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, CheckCircle2, Clock, AlertTriangle, Users, Heart, FileText } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, CheckCircle2, Clock, AlertTriangle, Users, Heart, FileText, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import type { TerminationFormData } from '@/data/terminationItems'
 import { DEFAULT_TERMINATION_DATA, TERMINATION_SECTIONS } from '@/data/terminationItems'
 import { ProgressBar } from '@/components/ui'
 import { getRandomQuote } from '@/utils/wisdomQuotes'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 type SectionId =
   | 'identification'
@@ -407,6 +410,9 @@ function NotesSection() {
 export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
+  const [showGrounding, setShowGrounding] = useState(false)
+  const [showCompass, setShowCompass] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
 
   const methods = useForm<TerminationFormData>({
     defaultValues: DEFAULT_TERMINATION_DATA,
@@ -602,7 +608,33 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* Wellness Features */}
+              <button
+                onClick={() => setShowGrounding(true)}
+                className="p-2 rounded-lg hover:bg-amber-50 text-amber-400 hover:text-amber-500 transition-all"
+                aria-label="Regulate First - Grounding Exercise"
+                title="Regulate First"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowCompass(true)}
+                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
+                aria-label="Fidelity Compass"
+                title="Fidelity Compass"
+              >
+                <Compass className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowJournal(true)}
+                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
+                aria-label="Reflective Practice Journal"
+                title="Reflective Journal"
+              >
+                <PenLine className="w-5 h-5" />
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-sm font-medium rounded-lg hover:from-yellow-600 hover:to-amber-600 transition-colors shadow-lg"
@@ -699,6 +731,17 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
           </main>
         </div>
       </div>
+
+      {/* Wellness Modals */}
+      {showGrounding && (
+        <GroundingExercise onClose={() => setShowGrounding(false)} />
+      )}
+      {showCompass && (
+        <FidelityCompass onClose={() => setShowCompass(false)} />
+      )}
+      {showJournal && (
+        <ReflectiveJournal onClose={() => setShowJournal(false)} />
+      )}
     </FormProvider>
   )
 }
