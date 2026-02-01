@@ -6,6 +6,7 @@ import { CareCoordinatorAppShell } from '@/components/carecoordinator/CareCoordi
 import { ProgramFidelityAppShell } from '@/components/programfidelity/ProgramFidelityAppShell'
 import { TerminationAppShell } from '@/components/termination/TerminationAppShell'
 import { CPPClosingAppShell } from '@/components/cppclosing/CPPClosingAppShell'
+import { CoreInterventionAppShell } from '@/components/coreintervention/CoreInterventionAppShell'
 import type { FormType } from '@/types/app.types'
 
 function App() {
@@ -38,6 +39,8 @@ function App() {
       return <TerminationAppShell onBack={handleBack} />
     case 'cpp_closing':
       return <CPPClosingAppShell onBack={handleBack} />
+    case 'core_intervention':
+      return <CoreInterventionAppShell onBack={handleBack} />
     default:
       // For forms not yet implemented, go back to selector
       setSelectedFormType(null)
