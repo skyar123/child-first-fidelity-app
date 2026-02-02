@@ -12,6 +12,7 @@ import type {
 // Factory Functions
 // ========================================
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function createDefaultFormData(_caseId?: string): FormData {
   return {
     caseIdentification: {
@@ -79,6 +80,12 @@ export function createDefaultFormData(_caseId?: string): FormData {
       childFirstSite: '',
       date: '',
       items: {},
+    },
+    programFidelity: {
+      affiliateSiteName: '',
+      dateCompleted: '',
+      ratings: {},
+      comments: {},
     },
   }
 }

@@ -21,6 +21,7 @@ const SECTION_ORDER: SectionId[] = [
   'planOfCare',
   'homeVisit',
   'cppObjectives',
+  'programFidelity',
 ]
 
 interface AppShellProps {
@@ -39,6 +40,7 @@ import {
   PlanOfCareSection,
   HomeVisitSection,
   CPPObjectivesSection,
+  ProgramFidelitySection,
 } from '@/components/sections'
 
 function MainContent({
@@ -67,6 +69,8 @@ function MainContent({
       return <HomeVisitSection />
     case 'cppObjectives':
       return <CPPObjectivesSection />
+    case 'programFidelity':
+      return <ProgramFidelitySection />
     default:
       return null
   }
@@ -152,13 +156,14 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
   const caseName = clientInitials || 'New Case'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen animated-gradient-bg">
       {/* Back button row */}
       {onBack && (
-        <div className="bg-white border-b border-gray-200 px-4 py-2">
+        <div className="glass-header border-b border-white/20 px-4 py-2">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm 
+                     hover:bg-white/50 px-3 py-1.5 rounded-lg transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Form Selection

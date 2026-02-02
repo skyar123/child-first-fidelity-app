@@ -16,6 +16,20 @@ export interface FormData {
   homeVisit: HomeVisitChecklists
   cppObjectives: CPPObjectives
   careCoordinator: CareCoordinator
+  programFidelity: ProgramFidelity
+}
+
+// ========================================
+// Program Fidelity
+// ========================================
+
+export type ProgramFidelityRating = 0 | 1 | 2 | 3 | null
+
+export interface ProgramFidelity {
+  affiliateSiteName: string
+  dateCompleted: string
+  ratings: Record<string, ProgramFidelityRating>
+  comments: Record<string, string>
 }
 
 // ========================================
@@ -259,6 +273,7 @@ export interface SectionProgress {
   homeVisitChecklists: number
   cppObjectives: number
   careCoordinator: number
+  programFidelity: number
 }
 
 export interface Progress {
