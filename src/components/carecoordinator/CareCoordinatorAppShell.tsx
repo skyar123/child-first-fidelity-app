@@ -1,7 +1,11 @@
 import { useState, useCallback } from 'react'
 import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField, ProgressBar } from '@/components/ui'
+import { TextField } from '@/components/ui'
+import { GroundingExercise } from '@/components/ui/GroundingExercise'
+import { FidelityCompass } from '@/components/ui/FidelityCompass'
+import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
+import { getProgressMessage } from '@/utils/celebrations'
 import {
   careCoordinatorSections,
   type CareCoordinatorItem,
@@ -242,9 +246,11 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
     )
   }
 
+  const progressMessage = getProgressMessage(progress)
+
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen animated-gradient-bg">
         {/* Header */}
         <header className="sticky top-0 z-40 glass-header border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
@@ -263,16 +269,23 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25">
-                  <span className="text-white font-bold text-sm">CC</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 float-animation">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-sm font-semibold text-gray-900">
-                    Care Coordinator Interventions
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-sm font-bold gradient-text truncate max-w-[200px]">
+                      {formValues.identification.clientInitials || 'Care Coordinator'}
+                    </h1>
+                    {progress === 100 && (
+                      <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-medium">
+                        Complete!
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">
-                    {formValues.identification.clientInitials || 'New Assessment'}
+                    Care Coordinator Interventions
                   </p>
                 </div>
               </div>
@@ -307,7 +320,12 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
               <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all shadow-lg shadow-cyan-500/25"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 ml-2
+                         bg-gradient-to-r from-cyan-500 to-blue-500
+                         text-white text-sm font-semibold rounded-xl
+                         hover:from-cyan-600 hover:to-blue-600
+                         transition-all shadow-lg shadow-cyan-500/30
+                         hover:shadow-cyan-500/50 hover:-translate-y-0.5"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
@@ -316,16 +334,24 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
           </div>
 
           {/* Progress bar */}
-          <div className="px-4 pb-2">
-            <div className="flex items-center gap-2">
-              <ProgressBar
-                value={progress}
-                size="sm"
-                color={progress === 100 ? 'green' : 'cyan'}
-              />
-              <span className="text-xs font-medium text-gray-600 min-w-[3ch]">
-                {progress}%
-              </span>
+          <div className="px-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ease-out rounded-full ${
+                    progress === 100
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 progress-complete'
+                      : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500'
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{progressMessage.emoji}</span>
+                <span className="text-sm font-semibold text-gray-700 min-w-[3ch]">
+                  {progress}%
+                </span>
+              </div>
             </div>
           </div>
         </header>
@@ -393,6 +419,17 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
             </div>
           </main>
         </div>
+
+        {/* Wellness Modals */}
+        {showGrounding && (
+          <GroundingExercise onClose={() => setShowGrounding(false)} />
+        )}
+        {showCompass && (
+          <FidelityCompass onClose={() => setShowCompass(false)} />
+        )}
+        {showJournal && (
+          <ReflectiveJournal onClose={() => setShowJournal(false)} />
+        )}
       </div>
 
       {/* Wellness Modals */}
