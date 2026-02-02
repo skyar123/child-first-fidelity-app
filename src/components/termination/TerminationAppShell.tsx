@@ -1,27 +1,24 @@
 import { useState, useCallback, useMemo } from 'react'
 import { ArrowLeft, Menu, Download, X } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
-import type { SupervisionFormData } from '@/types/supervision.types'
-import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
-import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
+import type { TerminationFormData } from '@/types/termination.types'
+import { createDefaultTerminationFormData } from '@/data/terminationSchema'
 
 // Section components
-import { SupervisionIdentificationSection } from './sections/SupervisionIdentificationSection'
-import { ProceduralFidelitySection } from './sections/ProceduralFidelitySection'
-import { SupervisorCapacitySection } from './sections/SupervisorCapacitySection'
-import { KnowledgeAreasSection } from './sections/KnowledgeAreasSection'
-import { SkillsCompetenciesSection } from './sections/SkillsCompetenciesSection'
-import { GlobalRatingsSection } from './sections/GlobalRatingsSection'
-import { SupervisionLogSection } from './sections/SupervisionLogSection'
+import { ClosingFormSection } from './sections/ClosingFormSection'
+import { PlannedTerminationSection } from './sections/PlannedTerminationSection'
+import { UnplannedTerminationSection } from './sections/UnplannedTerminationSection'
+import { TerminationContactLogSection } from './sections/TerminationContactLogSection'
+import { CoreInterventionFidelitySection } from './sections/CoreInterventionFidelitySection'
+import { CPPObjectivesSection } from './sections/CPPObjectivesSection'
 
 type SectionId =
-  | 'identification'
-  | 'procedural'
-  | 'capacity'
-  | 'knowledge'
-  | 'skills'
-  | 'global'
-  | 'log'
+  | 'closing'
+  | 'planned'
+  | 'unplanned'
+  | 'contactLog'
+  | 'coreIntervention'
+  | 'cppObjectives'
 
 interface Section {
   id: SectionId
@@ -30,26 +27,25 @@ interface Section {
 }
 
 const sections: Section[] = [
-  { id: 'identification', label: 'Identification', shortLabel: 'Identification' },
-  { id: 'procedural', label: 'Procedural Fidelity', shortLabel: 'Procedural Fidelity' },
-  { id: 'capacity', label: 'Supervisor Capacity', shortLabel: 'Supervisor Capacity' },
-  { id: 'knowledge', label: 'Knowledge Areas', shortLabel: 'Knowledge Areas' },
-  { id: 'skills', label: 'Skills & Competencies', shortLabel: 'Skills & Competencies' },
-  { id: 'global', label: 'Global Ratings', shortLabel: 'Global Ratings' },
-  { id: 'log', label: 'Supervision Log', shortLabel: 'Supervision Log' }
+  { id: 'closing', label: 'CPP Closing Form', shortLabel: 'Closing Form' },
+  { id: 'planned', label: 'Procedural Fidelity: Planned Termination', shortLabel: 'Planned Termination' },
+  { id: 'unplanned', label: 'Procedural Fidelity: Unplanned Termination', shortLabel: 'Unplanned Termination' },
+  { id: 'contactLog', label: 'CPP Contact Log', shortLabel: 'Contact Log' },
+  { id: 'coreIntervention', label: 'CPP Core Intervention Fidelity', shortLabel: 'Intervention Fidelity' },
+  { id: 'cppObjectives', label: 'CPP Case Conceptualization', shortLabel: 'CPP Objectives' },
 ]
 
-interface SupervisionAppShellProps {
+interface TerminationAppShellProps {
   onBack: () => void
 }
 
-export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
-  const [currentSection, setCurrentSection] = useState<SectionId>('identification')
+export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
+  const [currentSection, setCurrentSection] = useState<SectionId>('closing')
   const [navOpen, setNavOpen] = useState(false)
 
-  const methods = useForm<SupervisionFormData>({
-    defaultValues: createDefaultSupervisionFormData(),
-    mode: 'onChange'
+  const methods = useForm<TerminationFormData>({
+    defaultValues: createDefaultTerminationFormData(),
+    mode: 'onChange',
   })
 
   const { watch } = methods
@@ -58,52 +54,83 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   // Calculate per-section progress
   const sectionProgress = useMemo(() => {
     const progress: Record<SectionId, number> = {
-      identification: 0,
-      procedural: 0,
-      capacity: 0,
-      knowledge: 0,
-      skills: 0,
-      global: 0,
-      log: 0
+      closing: 0,
+      planned: 0,
+      unplanned: 0,
+      contactLog: 0,
+      coreIntervention: 0,
+      cppObjectives: 0,
     }
 
-    // Identification (3 fields)
-    let idCompleted = 0
-    if (formValues.identification.clinicalTeamNames) idCompleted++
-    if (formValues.identification.childFirstSite) idCompleted++
-    if (formValues.identification.monthYear) idCompleted++
-    progress.identification = Math.round((idCompleted / 3) * 100)
+    // Closing Form progress (identification + 7 questions)
+    const closing = formValues.closingForm
+    let closingCompleted = 0
+    let closingTotal = 12 // 5 identification + 7 questions
+    if (closing.clinicalTeamNames) closingCompleted++
+    if (closing.clientInitials) closingCompleted++
+    if (closing.childFirstSite) closingCompleted++
+    if (closing.monthYear) closingCompleted++
+    if (closing.careLogicId) closingCompleted++
+    if (closing.terminationPhase) closingCompleted++
+    if (closing.terminationInitiator) closingCompleted++
+    if (closing.terminationType) closingCompleted++
+    if (closing.changeInFunctioning) closingCompleted++
+    if (closing.prognosis) closingCompleted++
+    // Closing reasons count as 1 if any selected
+    const anyReasonSelected = Object.values(closing.closingReasons).some(v => v === true || (typeof v === 'string' && v.length > 0))
+    if (anyReasonSelected) closingCompleted++
+    if (closing.transferToAnotherClinician !== null) closingCompleted++
+    progress.closing = Math.round((closingCompleted / closingTotal) * 100)
 
-    // Procedural items
-    const proceduralCompleted = Object.values(formValues.proceduralFidelity.items).filter(v => v !== null).length
-    progress.procedural = Math.round((proceduralCompleted / 7) * 100)
+    // Planned Termination progress
+    const planned = formValues.plannedTermination
+    const plannedItems = Object.entries(planned.items).filter(([key]) => !key.includes('lessThan'))
+    const plannedCompleted = plannedItems.filter(([, v]) => v !== null).length
+    progress.planned = Math.round((plannedCompleted / plannedItems.length) * 100)
 
-    // Capacity items
-    const capacityCompleted =
-      Object.values(formValues.supervisorCapacity.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.supervisorCapacity.clinicianOnlyItems).filter(v => v !== null).length +
-      Object.values(formValues.supervisorCapacity.careCoordinatorOnlyItems).filter(v => v !== null).length
-    progress.capacity = Math.round((capacityCompleted / 18) * 100)
+    // Unplanned Termination progress
+    const unplanned = formValues.unplannedTermination
+    const unplannedCompleted = Object.values(unplanned.items).filter(v => v !== null).length
+    progress.unplanned = Math.round((unplannedCompleted / 5) * 100)
 
-    // Knowledge items
-    const knowledgeCompleted =
-      Object.values(formValues.knowledgeAreas.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.knowledgeAreas.careCoordinatorOnlyItems).filter(v => v !== null).length
-    progress.knowledge = Math.round((knowledgeCompleted / 9) * 100)
+    // Contact Log progress (at least one entry = 100%)
+    progress.contactLog = formValues.contactLog.entries.length > 0 ? 100 : 0
 
-    // Skills items
-    const skillsCompleted =
-      Object.values(formValues.skillsCompetencies.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.skillsCompetencies.clinicianOnlyItems).filter(v => v !== null).length +
-      Object.values(formValues.skillsCompetencies.careCoordinatorOnlyItems).filter(v => v !== null).length
-    progress.skills = Math.round((skillsCompleted / 15) * 100)
+    // Core Intervention Fidelity - simplified calculation
+    // Count non-null responses in the nested structure
+    let coreTotal = 0
+    let coreCompleted = 0
+    const countDualResponses = (obj: unknown): void => {
+      if (obj && typeof obj === 'object') {
+        if ('clinician' in obj && 'careCoordinator' in obj) {
+          coreTotal += 2
+          if ((obj as { clinician: unknown }).clinician !== null) coreCompleted++
+          if ((obj as { careCoordinator: unknown }).careCoordinator !== null) coreCompleted++
+        } else {
+          Object.values(obj).forEach(countDualResponses)
+        }
+      }
+    }
+    countDualResponses(formValues.coreInterventionFidelity)
+    progress.coreIntervention = coreTotal > 0 ? Math.round((coreCompleted / coreTotal) * 100) : 0
 
-    // Global ratings
-    const globalCompleted = Object.values(formValues.globalRatings.items).filter(v => v !== null).length
-    progress.global = Math.round((globalCompleted / 3) * 100)
-
-    // Log - check if there are any entries
-    progress.log = formValues.supervisionLog?.length > 0 ? 100 : 0
+    // CPP Objectives progress
+    let objTotal = 0
+    let objCompleted = 0
+    const countObjectiveRatings = (obj: unknown): void => {
+      if (obj && typeof obj === 'object') {
+        if ('clinicalFocus' in obj && 'appropriateness' in obj && 'progressCurrent' in obj) {
+          objTotal += 3
+          if ((obj as { clinicalFocus: unknown }).clinicalFocus !== null) objCompleted++
+          if ((obj as { appropriateness: unknown }).appropriateness !== null) objCompleted++
+          if ((obj as { progressCurrent: unknown }).progressCurrent !== null) objCompleted++
+        } else {
+          Object.values(obj).forEach(countObjectiveRatings)
+        }
+      }
+    }
+    countObjectiveRatings(formValues.cppObjectives)
+    progress.cppObjectives = objTotal > 0 ? Math.round((objCompleted / objTotal) * 100) : 0
 
     return progress
   }, [formValues])
@@ -123,26 +150,24 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   }
 
   const handleExportPDF = useCallback(() => {
-    const data = methods.getValues()
-    generateSupervisionPDF(data)
+    // TODO: Implement PDF export for termination form
+    console.log('Export Termination PDF', methods.getValues())
   }, [methods])
 
   const renderSection = () => {
     switch (currentSection) {
-      case 'identification':
-        return <SupervisionIdentificationSection />
-      case 'procedural':
-        return <ProceduralFidelitySection />
-      case 'capacity':
-        return <SupervisorCapacitySection />
-      case 'knowledge':
-        return <KnowledgeAreasSection />
-      case 'skills':
-        return <SkillsCompetenciesSection />
-      case 'global':
-        return <GlobalRatingsSection />
-      case 'log':
-        return <SupervisionLogSection />
+      case 'closing':
+        return <ClosingFormSection />
+      case 'planned':
+        return <PlannedTerminationSection />
+      case 'unplanned':
+        return <UnplannedTerminationSection />
+      case 'contactLog':
+        return <TerminationContactLogSection />
+      case 'coreIntervention':
+        return <CoreInterventionFidelitySection />
+      case 'cppObjectives':
+        return <CPPObjectivesSection />
       default:
         return null
     }
@@ -170,15 +195,15 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SF</span>
+                <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">TF</span>
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-sm font-semibold text-gray-900">
-                    Supervision Fidelity
+                    Termination Fidelity
                   </h1>
                   <p className="text-xs text-gray-500">
-                    {formValues.identification.clinicalTeamNames || 'New Assessment'}
+                    {formValues.closingForm.clientInitials || 'New Assessment'}
                   </p>
                 </div>
               </div>
@@ -187,7 +212,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
@@ -203,7 +228,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
           {/* Gradient progress bar */}
           <div className="h-1 bg-gray-100">
             <div
-              className="h-full bg-gradient-to-r from-pink-500 to-green-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-yellow-500 to-green-500 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -241,9 +266,9 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
             {/* Desktop header */}
             <div className="hidden lg:block p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">
-                Supervision Fidelity
+                Termination Fidelity
               </h2>
-              <p className="text-sm text-gray-500 mt-1">Assessment Checklist</p>
+              <p className="text-sm text-gray-500 mt-1">Recapitulation & Termination Phase</p>
             </div>
 
             {/* Section list */}
@@ -264,7 +289,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
                           w-full text-left px-4 py-3 flex items-center gap-3
                           transition-colors duration-150
                           ${isActive
-                            ? 'bg-pink-50 border-r-2 border-pink-600'
+                            ? 'bg-yellow-50 border-r-2 border-yellow-500'
                             : 'hover:bg-gray-50'
                           }
                         `}
@@ -274,7 +299,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
                           className={`
                             flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
                             ${isActive
-                              ? 'bg-pink-600 text-white'
+                              ? 'bg-yellow-500 text-white'
                               : progressValue === 100
                                 ? 'bg-green-500 text-white'
                                 : 'bg-gray-200 text-gray-600'
@@ -289,7 +314,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
                           <span
                             className={`
                               block text-sm font-medium truncate
-                              ${isActive ? 'text-pink-700' : 'text-gray-700'}
+                              ${isActive ? 'text-yellow-700' : 'text-gray-700'}
                             `}
                           >
                             {section.shortLabel}

@@ -37,10 +37,10 @@ export const FORM_TYPES: FormTypeInfo[] = [
     id: 'termination',
     name: 'Termination Fidelity',
     shortName: 'Termination',
-    description: 'End of treatment assessment and documentation',
+    description: 'Child First Recapitulation and Termination Phase assessment',
     color: 'yellow',
     icon: '✅',
-    available: false // Coming soon
+    available: true
   },
   {
     id: 'care_coordinator',
