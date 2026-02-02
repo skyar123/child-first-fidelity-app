@@ -2,7 +2,7 @@
 // App-Level Types
 // ========================================
 
-export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity' | 'cpp_closing'
+export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity'
 
 export interface FormTypeInfo {
   id: FormType
@@ -35,9 +35,9 @@ export const FORM_TYPES: FormTypeInfo[] = [
   },
   {
     id: 'termination',
-    name: 'Termination Fidelity',
+    name: 'Termination / CPP Closing',
     shortName: 'Termination',
-    description: 'Child First Recapitulation and Termination Phase assessment',
+    description: 'Recapitulation and Termination Phase — CPP closing form, planned/unplanned termination, contact log',
     color: 'yellow',
     icon: '✅',
     available: true
@@ -58,15 +58,6 @@ export const FORM_TYPES: FormTypeInfo[] = [
     description: 'Child First Program Fidelity assessment',
     color: 'purple',
     icon: '📊',
-    available: true
-  },
-  {
-    id: 'cpp_closing',
-    name: 'CPP Closing Form',
-    shortName: 'CPP Closing',
-    description: 'Recapitulation and Termination Phase - CPP closing documentation',
-    color: 'orange',
-    icon: '📝',
     available: true
   }
 ]
