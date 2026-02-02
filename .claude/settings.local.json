@@ -14,7 +14,10 @@
       "Bash(gh repo create:*)",
       "Bash(netlify sites:create:*)",
       "Bash(npx netlify login:*)",
-      "Bash(npx netlify:*)"
+      "Bash(npx netlify:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
