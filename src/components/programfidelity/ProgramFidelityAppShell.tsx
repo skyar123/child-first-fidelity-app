@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X, Building2, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
+import { useState, useCallback, useMemo } from 'react'
+import { ArrowLeft, Menu, Download, X, Building2, Sparkles, Heart, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField } from '@/components/ui'
+import { TextField, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
@@ -78,6 +78,7 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
   const [showGrounding, setShowGrounding] = useState(false)
   const [showCompass, setShowCompass] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<PFFormData>({
     defaultValues: createDefaultFormData(),
@@ -94,6 +95,35 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
     const data = methods.getValues()
     generateProgramFidelityPDF(data)
   }, [methods])
+
+  // Build focus mode sections
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    return programFidelitySections.map((section) => {
+      return {
+        id: section.id,
+        name: `${section.number}. ${section.title}`,
+        items: section.items
+          .filter(item => !item.isSubItem)
+          .map((item) => ({
+            id: item.id,
+            label: item.text.substring(0, 50) + '...',
+            sectionName: section.title,
+            isComplete: formValues.ratings?.[item.id] !== undefined && formValues.ratings?.[item.id] !== null,
+            content: (
+              <div className="p-4 bg-violet-50 rounded-xl border border-violet-200">
+                <h4 className="font-medium text-violet-800 mb-2">Program Fidelity Item</h4>
+                <p className="text-gray-700">{item.text}</p>
+                <p className="text-xs text-gray-500 mt-2">Rate 0-3 for this item</p>
+              </div>
+            ),
+          })),
+      }
+    })
+  }, [formValues])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    setCurrentSection(sectionId)
+  }, [])
 
   const renderContent = () => {
     if (currentSection === 'identification') {
@@ -246,6 +276,17 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Focus Mode Button */}
+              <button
+                onClick={() => setShowFocusMode(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+                aria-label="Enter Focus Mode"
+                title="Focus Mode - Review items one at a time"
+              >
+                <Focus className="w-4 h-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               {/* Wellness Tools */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -401,6 +442,16 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
         {showJournal && (
           <ReflectiveJournal onClose={() => setShowJournal(false)} />
         )}
+
+        {/* Focus Mode */}
+        <GlobalFocusMode
+          isOpen={showFocusMode}
+          onClose={() => setShowFocusMode(false)}
+          sections={focusModeSections}
+          currentSectionId={currentSection}
+          title="Program Fidelity Focus Mode"
+          onSectionChange={handleFocusModeSection}
+        />
       </div>
     </FormProvider>
   )

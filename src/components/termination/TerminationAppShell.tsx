@@ -1,8 +1,9 @@
 import { useState, useCallback, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X, Heart, Sparkles, Compass, PenLine } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Heart, Sparkles, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
+import { GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 
 // Section components
 import { ClosingFormSection } from './sections/ClosingFormSection'
@@ -49,6 +50,7 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
   const [showGrounding, setShowGrounding] = useState(false)
   const [showCompass, setShowCompass] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<TerminationFormData>({
     defaultValues: createDefaultTerminationFormData(),
@@ -161,6 +163,31 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
     console.log('Export Termination PDF', methods.getValues())
   }, [methods])
 
+  // Build focus mode sections
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    return sections.map((section) => ({
+      id: section.id,
+      name: section.label,
+      items: [{
+        id: `${section.id}_overview`,
+        label: section.shortLabel,
+        sectionName: section.label,
+        isComplete: sectionProgress[section.id] === 100,
+        content: (
+          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <h4 className="font-medium text-amber-800 mb-2">{section.label}</h4>
+            <p className="text-gray-700">Navigate to this section to complete the items.</p>
+            <p className="text-xs text-gray-500 mt-2">Progress: {sectionProgress[section.id]}% complete</p>
+          </div>
+        ),
+      }],
+    }))
+  }, [sectionProgress])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    setCurrentSection(sectionId as SectionId)
+  }, [])
+
   const renderSection = () => {
     switch (currentSection) {
       case 'closing':
@@ -226,6 +253,17 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Focus Mode Button */}
+              <button
+                onClick={() => setShowFocusMode(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+                aria-label="Enter Focus Mode"
+                title="Focus Mode - Review items one at a time"
+              >
+                <Focus className="w-4 h-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               {/* Wellness Tools */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -415,6 +453,16 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
         {showJournal && (
           <ReflectiveJournal onClose={() => setShowJournal(false)} />
         )}
+
+        {/* Focus Mode */}
+        <GlobalFocusMode
+          isOpen={showFocusMode}
+          onClose={() => setShowFocusMode(false)}
+          sections={focusModeSections}
+          currentSectionId={currentSection}
+          title="Termination Fidelity Focus Mode"
+          onSectionChange={handleFocusModeSection}
+        />
       </div>
     </FormProvider>
   )

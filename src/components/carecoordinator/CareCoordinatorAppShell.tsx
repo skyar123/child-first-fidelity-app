@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw, Heart, Compass, PenLine, Sparkles } from 'lucide-react'
+import { useState, useCallback, useMemo } from 'react'
+import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw, Heart, Compass, PenLine, Sparkles, Focus } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField } from '@/components/ui'
+import { TextField, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
@@ -86,6 +86,7 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
   const [showGrounding, setShowGrounding] = useState(false)
   const [showCompass, setShowCompass] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<CCFormData>({
     defaultValues: createDefaultFormData(),
@@ -137,6 +138,30 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
   const handleExportPDF = useCallback(() => {
     generateCareCoordinatorPDF(methods.getValues())
   }, [methods])
+
+  // Build focus mode sections
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    return sections.map((section) => ({
+      id: section.id,
+      name: section.label,
+      items: [{
+        id: `${section.id}_overview`,
+        label: section.label,
+        sectionName: section.label,
+        isComplete: false, // Simplified - could calculate based on items
+        content: (
+          <div className="p-4 bg-cyan-50 rounded-xl border border-cyan-200">
+            <h4 className="font-medium text-cyan-800 mb-2">{section.label}</h4>
+            <p className="text-gray-700">Navigate to this section to complete the items.</p>
+          </div>
+        ),
+      }],
+    }))
+  }, [])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    setCurrentSection(sectionId as SectionId)
+  }, [])
 
   const renderContent = () => {
     if (currentSection === 'identification') {
@@ -289,6 +314,17 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Focus Mode Button */}
+              <button
+                onClick={() => setShowFocusMode(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+                aria-label="Enter Focus Mode"
+                title="Focus Mode - Review items one at a time"
+              >
+                <Focus className="w-4 h-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               {/* Wellness Features */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -427,18 +463,17 @@ export function CareCoordinatorAppShell({ onBack }: CareCoordinatorAppShellProps
         {showJournal && (
           <ReflectiveJournal onClose={() => setShowJournal(false)} />
         )}
-      </div>
 
-      {/* Wellness Modals */}
-      {showGrounding && (
-        <GroundingExercise onClose={() => setShowGrounding(false)} />
-      )}
-      {showCompass && (
-        <FidelityCompass onClose={() => setShowCompass(false)} />
-      )}
-      {showJournal && (
-        <ReflectiveJournal onClose={() => setShowJournal(false)} />
-      )}
+        {/* Focus Mode */}
+        <GlobalFocusMode
+          isOpen={showFocusMode}
+          onClose={() => setShowFocusMode(false)}
+          sections={focusModeSections}
+          currentSectionId={currentSection}
+          title="Care Coordinator Focus Mode"
+          onSectionChange={handleFocusModeSection}
+        />
+      </div>
     </FormProvider>
   )
 }

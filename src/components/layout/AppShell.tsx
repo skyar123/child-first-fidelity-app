@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Header } from './Header'
 import { Navigation, type SectionId } from './Navigation'
@@ -8,6 +8,8 @@ import { useCaseManager, useSectionNavigation } from '@/hooks'
 import { useFormContext } from 'react-hook-form'
 import type { FormData } from '@/types/form.types'
 import { generatePDF } from '@/utils/pdfExport'
+import { GlobalFocusMode, type FocusModeSection } from '@/components/ui'
+import { fidelityStrands } from '@/data/fidelityItems'
 
 // Section IDs in order for navigation
 const SECTION_ORDER: SectionId[] = [
@@ -80,6 +82,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
   const [currentSection, setCurrentSection] = useState<SectionId>('demographics')
   const [navOpen, setNavOpen] = useState(false)
   const [caseSelectorOpen, setCaseSelectorOpen] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const {
     cases,
@@ -155,6 +158,73 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
   const caseName = clientInitials || 'New Case'
 
+  // Build focus mode sections from fidelity strands
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    const formData = getValues()
+    const sections: FocusModeSection[] = []
+    const fidelityData = formData?.fidelityStrands as unknown as Record<string, { challenges?: Record<string, unknown>; capacity?: Record<string, unknown> }> | undefined
+
+    // Add Fidelity Strands section
+    fidelityStrands.forEach((strand) => {
+      const strandData = fidelityData?.[strand.id]
+      const strandItems = [
+        // Challenge items
+        ...strand.challengeItems.map((item) => ({
+          id: `challenge_${item.id}`,
+          label: `Challenge: ${item.text.substring(0, 50)}...`,
+          sectionName: strand.title,
+          isComplete: !!strandData?.challenges?.[item.id],
+          content: (
+            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+              <h4 className="font-medium text-amber-800 mb-2">Challenge Assessment</h4>
+              <p className="text-gray-700">{item.text}</p>
+              <p className="text-xs text-gray-500 mt-2">Rate the challenge level for this item</p>
+            </div>
+          ),
+        })),
+        // Capacity items
+        ...strand.capacityItems.map((item) => ({
+          id: `capacity_${item.id}`,
+          label: `Capacity: ${item.text.substring(0, 50)}...`,
+          sectionName: strand.title,
+          isComplete: !!strandData?.capacity?.[item.id],
+          content: (
+            <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+              <h4 className="font-medium text-green-800 mb-2">Capacity Assessment</h4>
+              <p className="text-gray-700">{item.text}</p>
+              <p className="text-xs text-gray-500 mt-2">Rate the capacity level for this item</p>
+            </div>
+          ),
+        })),
+      ]
+
+      if (strandItems.length > 0) {
+        sections.push({
+          id: strand.id,
+          name: strand.title,
+          items: strandItems,
+        })
+      }
+    })
+
+    return sections
+  }, [getValues])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    // Map strand IDs to section IDs
+    const strandToSection: Record<string, SectionId> = {
+      strand1: 'fidelity',
+      strand2: 'fidelity',
+      strand3: 'fidelity',
+      strand4: 'fidelity',
+      strand5: 'fidelity',
+    }
+    const targetSection = strandToSection[sectionId]
+    if (targetSection) {
+      setCurrentSection(targetSection)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen animated-gradient-bg">
       {/* Back button row */}
@@ -177,6 +247,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         onExportPDF={handleExportPDF}
         onOpenCases={() => setCaseSelectorOpen(true)}
         onClearData={handleClearData}
+        onFocusMode={() => setShowFocusMode(true)}
       />
 
       <div className="lg:flex">
@@ -203,6 +274,16 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         onDuplicateCase={duplicateCase}
         onExportCase={handleExportCase}
         onImportCase={handleImportCase}
+      />
+
+      {/* Focus Mode */}
+      <GlobalFocusMode
+        isOpen={showFocusMode}
+        onClose={() => setShowFocusMode(false)}
+        sections={focusModeSections}
+        currentSectionId={focusModeSections[0]?.id}
+        title="Foundational Phase Focus Mode"
+        onSectionChange={handleFocusModeSection}
       />
     </div>
   )

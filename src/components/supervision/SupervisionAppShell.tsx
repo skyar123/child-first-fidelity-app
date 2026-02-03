@@ -1,13 +1,15 @@
 import { useState, useCallback, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Sparkles, Heart, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
 import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
+import { GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 import { getProgressMessage } from '@/utils/celebrations'
 import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
+import { proceduralFidelityItems, supervisorCapacityGeneralItems } from '@/data/supervisionItems'
 
 // Section components
 import { SupervisionIdentificationSection } from './sections/SupervisionIdentificationSection'
@@ -53,6 +55,7 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   const [showGrounding, setShowGrounding] = useState(false)
   const [showCompass, setShowCompass] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<SupervisionFormData>({
     defaultValues: createDefaultSupervisionFormData(),
@@ -134,6 +137,50 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
     generateSupervisionPDF(data)
   }, [methods])
 
+  // Build focus mode sections
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    return [
+      {
+        id: 'procedural',
+        name: 'Procedural Fidelity',
+        items: proceduralFidelityItems.map((item) => ({
+          id: item.id,
+          label: item.text.substring(0, 50) + '...',
+          sectionName: 'Procedural Fidelity',
+          isComplete: formValues.proceduralFidelity.items[item.id] !== null,
+          content: (
+            <div className="p-4 bg-pink-50 rounded-xl border border-pink-200">
+              <h4 className="font-medium text-pink-800 mb-2">Procedural Fidelity Item</h4>
+              <p className="text-gray-700">{item.text}</p>
+              <p className="text-xs text-gray-500 mt-2">Rate Yes or No for this item</p>
+            </div>
+          ),
+        })),
+      },
+      {
+        id: 'capacity',
+        name: 'Supervisor Capacity',
+        items: supervisorCapacityGeneralItems.map((item) => ({
+          id: item.id,
+          label: item.text.substring(0, 50) + '...',
+          sectionName: 'Supervisor Capacity',
+          isComplete: formValues.supervisorCapacity.generalItems[item.id] !== null,
+          content: (
+            <div className="p-4 bg-rose-50 rounded-xl border border-rose-200">
+              <h4 className="font-medium text-rose-800 mb-2">Supervisor Capacity Item</h4>
+              <p className="text-gray-700">{item.text}</p>
+              <p className="text-xs text-gray-500 mt-2">Rate the capacity level for this item</p>
+            </div>
+          ),
+        })),
+      },
+    ]
+  }, [formValues])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    setCurrentSection(sectionId as SectionId)
+  }, [])
+
   const renderSection = () => {
     switch (currentSection) {
       case 'identification':
@@ -201,6 +248,17 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Focus Mode Button */}
+              <button
+                onClick={() => setShowFocusMode(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+                aria-label="Enter Focus Mode"
+                title="Focus Mode - Review items one at a time"
+              >
+                <Focus className="w-4 h-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               {/* Wellness Tools */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -390,6 +448,16 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
         {showJournal && (
           <ReflectiveJournal onClose={() => setShowJournal(false)} />
         )}
+
+        {/* Focus Mode */}
+        <GlobalFocusMode
+          isOpen={showFocusMode}
+          onClose={() => setShowFocusMode(false)}
+          sections={focusModeSections}
+          currentSectionId={currentSection}
+          title="Supervision Fidelity Focus Mode"
+          onSectionChange={handleFocusModeSection}
+        />
       </div>
     </FormProvider>
   )
