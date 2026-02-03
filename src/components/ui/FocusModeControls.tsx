@@ -124,6 +124,150 @@ export function FocusModeRatingControl({
   )
 }
 
+// Checkbox control for assessment checklist items
+interface FocusModeCheckboxControlProps {
+  questionText: string
+  questionNumber?: string
+  questionType?: string
+  isChecked: boolean
+  onChange: (checked: boolean) => void
+  isChildFirstOnly?: boolean
+  subItems?: Array<{
+    id: string
+    text: string
+    isChecked: boolean
+    onChange: (checked: boolean) => void
+  }>
+  radioOptions?: Array<{
+    value: string
+    label: string
+    isSelected: boolean
+    onChange: () => void
+  }>
+}
+
+export function FocusModeCheckboxControl({
+  questionText,
+  questionNumber,
+  questionType = 'Checklist Item',
+  isChecked,
+  onChange,
+  isChildFirstOnly,
+  subItems,
+  radioOptions,
+}: FocusModeCheckboxControlProps) {
+  return (
+    <div className="space-y-4">
+      {/* Question header */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-block text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-1 rounded-lg">
+            {questionType}
+          </span>
+          {isChildFirstOnly && (
+            <span className="inline-block text-xs font-medium text-teal-600 bg-teal-100 px-2 py-1 rounded-lg">
+              CF
+            </span>
+          )}
+        </div>
+        <p className="text-base sm:text-lg font-medium text-gray-900 leading-relaxed">
+          {questionNumber && <span className="text-indigo-600">{questionNumber}. </span>}
+          {questionText}
+        </p>
+      </div>
+
+      {/* Main checkbox or sub-items */}
+      {subItems && subItems.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Complete sub-items:</p>
+          <div className="space-y-2">
+            {subItems.map((subItem) => (
+              <button
+                key={subItem.id}
+                type="button"
+                onClick={() => subItem.onChange(!subItem.isChecked)}
+                className={`
+                  w-full px-4 py-3 rounded-xl border-2 text-sm font-medium
+                  transition-all duration-200 text-left flex items-start gap-3
+                  ${subItem.isChecked
+                    ? 'bg-green-500 text-white border-green-600 shadow-md'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-green-300 hover:bg-green-50'}
+                `}
+              >
+                <span className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                  subItem.isChecked ? 'border-white bg-white/20' : 'border-gray-300'
+                }`}>
+                  {subItem.isChecked && (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </span>
+                <span>{subItem.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : radioOptions && radioOptions.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Select one option:</p>
+          <div className="space-y-2">
+            {radioOptions.map((option, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={option.onChange}
+                className={`
+                  w-full px-4 py-3 rounded-xl border-2 text-sm font-medium
+                  transition-all duration-200 text-left flex items-start gap-3
+                  ${option.isSelected
+                    ? 'bg-indigo-500 text-white border-indigo-600 shadow-md'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'}
+                `}
+              >
+                <span className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  option.isSelected ? 'border-white bg-white/20' : 'border-gray-300'
+                }`}>
+                  {option.isSelected && (
+                    <span className="w-2 h-2 rounded-full bg-current" />
+                  )}
+                </span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Mark as complete:</p>
+          <button
+            type="button"
+            onClick={() => onChange(!isChecked)}
+            className={`
+              w-full px-4 py-4 rounded-xl border-2 text-base font-medium
+              transition-all duration-200 flex items-center justify-center gap-3
+              ${isChecked
+                ? 'bg-green-500 text-white border-green-600 shadow-md scale-[1.02]'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-green-300 hover:bg-green-50'}
+            `}
+          >
+            <span className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${
+              isChecked ? 'border-white bg-white/20' : 'border-gray-300'
+            }`}>
+              {isChecked && (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </span>
+            <span>{isChecked ? 'Completed' : 'Mark as Complete'}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Simple wrapper for text items that don't have ratings
 interface FocusModeInfoCardProps {
   title: string

@@ -12,10 +12,12 @@ import {
   GlobalFocusMode,
   type FocusModeSection,
   FocusModeRatingControl,
+  FocusModeCheckboxControl,
   CHALLENGE_OPTIONS,
   CAPACITY_OPTIONS
 } from '@/components/ui'
 import { fidelityStrands } from '@/data/fidelityItems'
+import { assessmentSections, isItemVisible } from '@/data/assessmentItems'
 
 // Section IDs in order for navigation
 const SECTION_ORDER: SectionId[] = [
@@ -165,8 +167,8 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
   const caseName = clientInitials || 'New Case'
 
-  // Build focus mode sections from fidelity strands with INTERACTIVE controls
-  const focusModeSections = useMemo((): FocusModeSection[] => {
+  // Build focus mode sections for fidelity strands
+  const fidelityFocusSections = useMemo((): FocusModeSection[] => {
     const sections: FocusModeSection[] = []
     const fidelityData = formValues?.fidelityStrands as unknown as Record<string, { challengeItems?: Record<string, number | null>; capacityItems?: Record<string, number | null> }> | undefined
 
@@ -230,18 +232,128 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
     return sections
   }, [formValues, setValue])
 
-  const handleFocusModeSection = useCallback((sectionId: string) => {
-    // Map strand IDs to section IDs
-    const strandToSection: Record<string, SectionId> = {
-      strand1: 'fidelity',
-      strand2: 'fidelity',
-      strand3: 'fidelity',
-      strand4: 'fidelity',
-      strand5: 'fidelity',
+  // Build focus mode sections for assessment checklist
+  const assessmentFocusSections = useMemo((): FocusModeSection[] => {
+    const sections: FocusModeSection[] = []
+    const assessmentData = formValues?.assessmentChecklist as unknown as Record<string, unknown> | undefined
+
+    assessmentSections.forEach((section) => {
+      const sectionItems = section.items
+        .filter((item) => isItemVisible(item, (formValues || {}) as unknown as Record<string, unknown>))
+        .map((item) => {
+          const fieldPath = `assessmentChecklist.${item.id}`
+
+          // Handle different item types
+          if (item.type === 'checkbox') {
+            const isChecked = !!assessmentData?.[item.id]
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete: isChecked,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={isChecked}
+                  onChange={(checked) => setValue(fieldPath as never, checked as never)}
+                  isChildFirstOnly={item.childFirstOnly}
+                />
+              ),
+            }
+          } else if (item.type === 'multi-checkbox' && item.subItems) {
+            const itemData = assessmentData?.[item.id] as Record<string, boolean> | undefined
+            const completedCount = item.subItems.filter(sub => itemData?.[sub.id]).length
+            const isComplete = completedCount === item.subItems.length
+
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={isComplete}
+                  onChange={() => {}}
+                  isChildFirstOnly={item.childFirstOnly}
+                  subItems={item.subItems.map((sub) => ({
+                    id: sub.id,
+                    text: sub.text,
+                    isChecked: !!itemData?.[sub.id],
+                    onChange: (checked: boolean) => setValue(`${fieldPath}.${sub.id}` as never, checked as never),
+                  }))}
+                />
+              ),
+            }
+          } else if (item.type === 'radio' && item.options) {
+            const selectedValue = assessmentData?.[item.id] as string | undefined
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete: !!selectedValue,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={!!selectedValue}
+                  onChange={() => {}}
+                  isChildFirstOnly={item.childFirstOnly}
+                  radioOptions={item.options.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    isSelected: selectedValue === opt.value,
+                    onChange: () => setValue(fieldPath as never, opt.value as never),
+                  }))}
+                />
+              ),
+            }
+          }
+
+          return null
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null)
+
+      if (sectionItems.length > 0) {
+        sections.push({
+          id: `assessment_${section.id}`,
+          name: section.title,
+          items: sectionItems,
+        })
+      }
+    })
+
+    return sections
+  }, [formValues, setValue])
+
+  // Get the appropriate focus mode sections based on current section
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    if (currentSection === 'assessment') {
+      return assessmentFocusSections
     }
-    const targetSection = strandToSection[sectionId]
-    if (targetSection) {
-      setCurrentSection(targetSection)
+    // Default to fidelity sections for fidelity section (or if no specific section match)
+    return fidelityFocusSections
+  }, [currentSection, fidelityFocusSections, assessmentFocusSections])
+
+  // Get the focus mode title based on current section
+  const focusModeTitle = useMemo((): string => {
+    if (currentSection === 'assessment') {
+      return 'Assessment Focus Mode'
+    }
+    return 'Foundational Phase Focus Mode'
+  }, [currentSection])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    // Map focus mode section IDs to navigation section IDs
+    if (sectionId.startsWith('assessment_')) {
+      setCurrentSection('assessment')
+    } else if (sectionId.startsWith('strand')) {
+      setCurrentSection('fidelity')
     }
   }, [])
 
@@ -302,7 +414,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         onClose={() => setShowFocusMode(false)}
         sections={focusModeSections}
         currentSectionId={focusModeSections[0]?.id}
-        title="Foundational Phase Focus Mode"
+        title={focusModeTitle}
         onSectionChange={handleFocusModeSection}
       />
     </div>
