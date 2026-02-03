@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Menu, Plus, Download, FolderOpen, Save, Wifi, WifiOff, Trash2, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
+import { Menu, Plus, Download, FolderOpen, Save, Wifi, WifiOff, Trash2, Sparkles, Heart, Compass, PenLine, Focus } from 'lucide-react'
 import { useFormState } from '@/context/FormContext'
 import { getProgressMessage } from '@/utils/celebrations'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
@@ -13,6 +13,7 @@ interface HeaderProps {
   onExportPDF: () => void
   onOpenCases: () => void
   onClearData?: () => void
+  onFocusMode?: () => void
 }
 
 export function Header({
@@ -22,6 +23,7 @@ export function Header({
   onExportPDF,
   onOpenCases,
   onClearData,
+  onFocusMode,
 }: HeaderProps) {
   const { progress, isSaving, lastSaved, hasUnsavedChanges, forceSave } = useFormState()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -115,6 +117,19 @@ export function Header({
 
         {/* Right side */}
         <div className="flex items-center gap-1">
+          {/* Focus Mode Button */}
+          {onFocusMode && (
+            <button
+              onClick={onFocusMode}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+              aria-label="Enter Focus Mode"
+              title="Focus Mode - Review items one at a time"
+            >
+              <Focus className="w-4 h-4" />
+              <span className="hidden sm:inline">Focus</span>
+            </button>
+          )}
+          <span className="w-px h-6 bg-gray-200 mx-1" />
           {/* Grounding Exercise Button */}
           <button
             onClick={() => setShowGrounding(true)}

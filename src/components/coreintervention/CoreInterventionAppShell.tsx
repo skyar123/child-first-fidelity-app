@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles } from 'lucide-react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
+import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles, Focus } from 'lucide-react'
 import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
-import { AllNotesSection } from '@/components/ui'
+import { AllNotesSection, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
@@ -1082,6 +1082,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
   const [showGrounding, setShowGrounding] = useState(false)
   const [showCompass, setShowCompass] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   // Initialize form with default data or load from localStorage
   const methods = useForm<CoreInterventionFormData>({
@@ -1147,6 +1148,30 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
 
   const handleExportPDF = useCallback(() => {
     alert('PDF export for Core Intervention form coming soon!')
+  }, [])
+
+  // Build focus mode sections
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    return sections.map((section) => ({
+      id: section.id,
+      name: section.label,
+      items: [{
+        id: `${section.id}_overview`,
+        label: section.label,
+        sectionName: section.shortLabel,
+        isComplete: false, // Simplified
+        content: (
+          <div className="p-4 bg-teal-50 rounded-xl border border-teal-200">
+            <h4 className="font-medium text-teal-800 mb-2">{section.label}</h4>
+            <p className="text-gray-700">Navigate to this section to complete the items.</p>
+          </div>
+        ),
+      }],
+    }))
+  }, [])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    setCurrentSection(sectionId as SectionId)
   }, [])
 
   const renderSection = () => {
@@ -1235,6 +1260,17 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Focus Mode Button */}
+              <button
+                onClick={() => setShowFocusMode(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
+                aria-label="Enter Focus Mode"
+                title="Focus Mode - Review items one at a time"
+              >
+                <Focus className="w-4 h-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </button>
+              <span className="w-px h-6 bg-gray-200 mx-1" />
               {/* Wellness Features */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -1372,6 +1408,16 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
       {showJournal && (
         <ReflectiveJournal onClose={() => setShowJournal(false)} />
       )}
+
+      {/* Focus Mode */}
+      <GlobalFocusMode
+        isOpen={showFocusMode}
+        onClose={() => setShowFocusMode(false)}
+        sections={focusModeSections}
+        currentSectionId={currentSection}
+        title="Core Intervention Focus Mode"
+        onSectionChange={handleFocusModeSection}
+      />
     </FormProvider>
   )
 }
