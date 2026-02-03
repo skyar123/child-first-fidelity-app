@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw, Heart, Compass, PenLine } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Users, ClipboardCheck, HeartHandshake, Brain, RefreshCw, Heart, Compass, PenLine, Sparkles } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { TextField } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
@@ -11,9 +11,6 @@ import {
   type CareCoordinatorItem,
 } from '@/data/careCoordinatorItems'
 import { generateCareCoordinatorPDF } from '@/utils/pdfExportCareCoordinator'
-import { GroundingExercise } from '@/components/ui/GroundingExercise'
-import { FidelityCompass } from '@/components/ui/FidelityCompass'
-import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 // Form data types for standalone CC form
 interface CCFormData {

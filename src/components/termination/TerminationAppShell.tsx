@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, Heart, Sparkles, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
@@ -11,16 +11,10 @@ import { UnplannedTerminationSection } from './sections/UnplannedTerminationSect
 import { TerminationContactLogSection } from './sections/TerminationContactLogSection'
 import { CoreInterventionFidelitySection } from './sections/CoreInterventionFidelitySection'
 import { CPPObjectivesSection } from './sections/CPPObjectivesSection'
-import { useState, useCallback, useEffect } from 'react'
-import { ArrowLeft, Menu, Download, X, CheckCircle2, Clock, AlertTriangle, Users, Heart, FileText, Sparkles, Compass, PenLine } from 'lucide-react'
-import { useForm, FormProvider, useFormContext } from 'react-hook-form'
-import type { TerminationFormData } from '@/data/terminationItems'
-import { DEFAULT_TERMINATION_DATA, TERMINATION_SECTIONS } from '@/data/terminationItems'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 import { getProgressMessage } from '@/utils/celebrations'
-import { getRandomQuote } from '@/utils/wisdomQuotes'
 
 type SectionId =
   | 'closing'
@@ -190,15 +184,13 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gray-50">
       <div className="min-h-screen animated-gradient-bg">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-40 glass-header border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
                 onClick={onBack}
-                className="p-2 -ml-2 rounded-lg hover:bg-gray-100"
                 className="p-2 -ml-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Back to form selection"
               >
@@ -206,15 +198,11 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
               </button>
               <button
                 onClick={() => setNavOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
                 className="lg:hidden p-2 rounded-xl hover:bg-white/50 transition-colors"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">TF</span>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 float-animation">
                   <Sparkles className="w-5 h-5 text-white" />
@@ -222,7 +210,7 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
                 <div className="hidden sm:block">
                   <div className="flex items-center gap-2">
                     <h1 className="text-sm font-bold gradient-text truncate max-w-[200px]">
-                      {formValues.identification.clientInitials || 'Termination'}
+                      {formValues.closingForm.clientInitials || 'Termination'}
                     </h1>
                     {progress === 100 && (
                       <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-medium">
@@ -231,7 +219,6 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
                     )}
                   </div>
                   <p className="text-xs text-gray-500">
-                    {formValues.closingForm.clientInitials || 'New Assessment'}
                     Termination Fidelity
                   </p>
                 </div>
@@ -267,7 +254,6 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
               <span className="w-px h-6 bg-gray-200 mx-1" />
               <button
                 onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors"
                 className="hidden sm:flex items-center gap-2 px-4 py-2 ml-2
                          bg-gradient-to-r from-yellow-500 to-amber-500
                          text-white text-sm font-semibold rounded-xl
@@ -281,17 +267,6 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
             </div>
           </div>
 
-          {/* Progress percentage */}
-          <div className="px-4 pb-2 flex items-center gap-2">
-            <span className="text-xs text-gray-500">{progress}% complete</span>
-          </div>
-
-          {/* Gradient progress bar */}
-          <div className="h-1 bg-gray-100">
-            <div
-              className="h-full bg-gradient-to-r from-yellow-500 to-green-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
           {/* Progress bar */}
           <div className="px-4 pb-3">
             <div className="flex items-center gap-3">
