@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react'
-import { ArrowLeft, Menu, Download, X, Building2, ClipboardList, Heart, Compass, PenLine } from 'lucide-react'
 import { ArrowLeft, Menu, Download, X, Building2, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { TextField } from '@/components/ui'
@@ -15,9 +14,6 @@ import {
   type FidelityRating,
 } from '@/data/programFidelityItems'
 import { generateProgramFidelityPDF } from '@/utils/pdfExportProgramFidelity'
-import { GroundingExercise } from '@/components/ui/GroundingExercise'
-import { FidelityCompass } from '@/components/ui/FidelityCompass'
-import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
 
 // Form data types for standalone Program Fidelity form
 interface PFFormData {
@@ -250,10 +246,6 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Wellness Features */}
-              <button
-                onClick={() => setShowGrounding(true)}
-                className="p-2 rounded-lg hover:bg-violet-50 text-violet-400 hover:text-violet-500 transition-all"
               {/* Wellness Tools */}
               <button
                 onClick={() => setShowGrounding(true)}
@@ -265,7 +257,6 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
               </button>
               <button
                 onClick={() => setShowCompass(true)}
-                className="p-2 rounded-lg hover:bg-green-50 text-green-400 hover:text-green-500 transition-all"
                 className="p-2.5 rounded-xl hover:bg-green-50 text-green-500 hover:text-green-600 transition-all"
                 aria-label="Fidelity Compass"
                 title="Fidelity Compass"
@@ -274,7 +265,6 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
               </button>
               <button
                 onClick={() => setShowJournal(true)}
-                className="p-2 rounded-lg hover:bg-purple-50 text-purple-400 hover:text-purple-500 transition-all"
                 className="p-2.5 rounded-xl hover:bg-purple-50 text-purple-500 hover:text-purple-600 transition-all"
                 aria-label="Reflective Practice Journal"
                 title="Reflective Journal"
@@ -412,17 +402,6 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
           <ReflectiveJournal onClose={() => setShowJournal(false)} />
         )}
       </div>
-
-      {/* Wellness Modals */}
-      {showGrounding && (
-        <GroundingExercise onClose={() => setShowGrounding(false)} />
-      )}
-      {showCompass && (
-        <FidelityCompass onClose={() => setShowCompass(false)} />
-      )}
-      {showJournal && (
-        <ReflectiveJournal onClose={() => setShowJournal(false)} />
-      )}
     </FormProvider>
   )
 }

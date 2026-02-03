@@ -1,9 +1,4 @@
 import { useState, useCallback, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X } from 'lucide-react'
-import { useForm, FormProvider } from 'react-hook-form'
-import type { SupervisionFormData } from '@/types/supervision.types'
-import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
-import { useState, useCallback } from 'react'
 import { ArrowLeft, Menu, Download, X, Sparkles, Heart, Compass, PenLine } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
@@ -164,10 +159,9 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gray-50">
       <div className="min-h-screen animated-gradient-bg">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-40 glass-header border-b border-white/20">
           <div className="flex items-center justify-between px-4 h-14">
             <div className="flex items-center gap-3">
               <button
@@ -248,17 +242,6 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
             </div>
           </div>
 
-          {/* Progress percentage */}
-          <div className="px-4 pb-2 flex items-center gap-2">
-            <span className="text-xs text-gray-500">{progress}% complete</span>
-          </div>
-
-          {/* Gradient progress bar */}
-          <div className="h-1 bg-gray-100">
-            <div
-              className="h-full bg-gradient-to-r from-pink-500 to-green-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
           {/* Progress bar */}
           <div className="px-4 pb-3">
             <div className="flex items-center gap-3">
