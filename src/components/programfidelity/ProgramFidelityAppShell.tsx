@@ -1,7 +1,13 @@
 import { useState, useCallback, useMemo } from 'react'
 import { ArrowLeft, Menu, Download, X, Building2, Sparkles, Heart, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
-import { TextField, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
+import {
+  TextField,
+  GlobalFocusMode,
+  type FocusModeSection,
+  FocusModeRatingControl,
+  NUMERIC_RATING_OPTIONS
+} from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
@@ -96,8 +102,9 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
     generateProgramFidelityPDF(data)
   }, [methods])
 
-  // Build focus mode sections
+  // Build focus mode sections with INTERACTIVE controls
   const focusModeSections = useMemo((): FocusModeSection[] => {
+    const { setValue } = methods
     return programFidelitySections.map((section) => {
       return {
         id: section.id,
@@ -106,20 +113,23 @@ export function ProgramFidelityAppShell({ onBack }: ProgramFidelityAppShellProps
           .filter(item => !item.isSubItem)
           .map((item) => ({
             id: item.id,
-            label: item.text.substring(0, 50) + '...',
+            label: item.text.substring(0, 40) + '...',
             sectionName: section.title,
             isComplete: formValues.ratings?.[item.id] !== undefined && formValues.ratings?.[item.id] !== null,
             content: (
-              <div className="p-4 bg-violet-50 rounded-xl border border-violet-200">
-                <h4 className="font-medium text-violet-800 mb-2">Program Fidelity Item</h4>
-                <p className="text-gray-700">{item.text}</p>
-                <p className="text-xs text-gray-500 mt-2">Rate 0-3 for this item</p>
-              </div>
+              <FocusModeRatingControl
+                questionText={item.text}
+                questionType="Program Fidelity"
+                options={NUMERIC_RATING_OPTIONS}
+                value={formValues.ratings?.[item.id] ?? null}
+                onChange={(value) => setValue(`ratings.${item.id}` as never, value as never)}
+                helperText="Rate 0 (Not present) to 3 (Excellent)"
+              />
             ),
           })),
       }
     })
-  }, [formValues])
+  }, [formValues, methods])
 
   const handleFocusModeSection = useCallback((sectionId: string) => {
     setCurrentSection(sectionId)
