@@ -13,6 +13,7 @@ export { FocusMode, FocusModeToggle } from './FocusMode'
 export { GlobalFocusMode, type FocusModeItem, type FocusModeSection } from './GlobalFocusMode'
 export {
   FocusModeRatingControl,
+  FocusModeCheckboxControl,
   FocusModeInfoCard,
   CHALLENGE_OPTIONS,
   CAPACITY_OPTIONS,
