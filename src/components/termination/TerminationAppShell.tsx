@@ -5,6 +5,12 @@ import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
 import { GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 
+// Create default values once outside component to ensure stability
+// Use JSON parse/stringify to ensure a pure plain object with no prototype chain issues
+const defaultFormData: TerminationFormData = JSON.parse(
+  JSON.stringify(createDefaultTerminationFormData())
+)
+
 // Section components
 import { ClosingFormSection } from './sections/ClosingFormSection'
 import { PlannedTerminationSection } from './sections/PlannedTerminationSection'
@@ -53,7 +59,7 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
   const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<TerminationFormData>({
-    defaultValues: createDefaultTerminationFormData(),
+    defaultValues: defaultFormData,
     mode: 'onChange',
   })
 
