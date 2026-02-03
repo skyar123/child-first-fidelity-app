@@ -6,7 +6,13 @@ import { createDefaultSupervisionFormData } from '@/data/supervisionSchema'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
 import { FidelityCompass } from '@/components/ui/FidelityCompass'
 import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
-import { GlobalFocusMode, type FocusModeSection } from '@/components/ui'
+import {
+  GlobalFocusMode,
+  type FocusModeSection,
+  FocusModeRatingControl,
+  YES_NO_OPTIONS,
+  CAPACITY_FOCUS_OPTIONS
+} from '@/components/ui'
 import { getProgressMessage } from '@/utils/celebrations'
 import { generateSupervisionPDF } from '@/utils/pdfExportSupervision'
 import { proceduralFidelityItems, supervisorCapacityGeneralItems } from '@/data/supervisionItems'
@@ -137,23 +143,27 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
     generateSupervisionPDF(data)
   }, [methods])
 
-  // Build focus mode sections
+  // Build focus mode sections with INTERACTIVE controls
   const focusModeSections = useMemo((): FocusModeSection[] => {
+    const { setValue } = methods
     return [
       {
         id: 'procedural',
         name: 'Procedural Fidelity',
         items: proceduralFidelityItems.map((item) => ({
           id: item.id,
-          label: item.text.substring(0, 50) + '...',
+          label: item.text.substring(0, 40) + '...',
           sectionName: 'Procedural Fidelity',
           isComplete: formValues.proceduralFidelity.items[item.id] !== null,
           content: (
-            <div className="p-4 bg-pink-50 rounded-xl border border-pink-200">
-              <h4 className="font-medium text-pink-800 mb-2">Procedural Fidelity Item</h4>
-              <p className="text-gray-700">{item.text}</p>
-              <p className="text-xs text-gray-500 mt-2">Rate Yes or No for this item</p>
-            </div>
+            <FocusModeRatingControl
+              questionText={item.text}
+              questionType="Procedural Fidelity"
+              options={YES_NO_OPTIONS}
+              value={formValues.proceduralFidelity.items[item.id]}
+              onChange={(value) => setValue(`proceduralFidelity.items.${item.id}` as never, value as never)}
+              helperText="Does this usually occur (≥80% of time)?"
+            />
           ),
         })),
       },
@@ -162,20 +172,23 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
         name: 'Supervisor Capacity',
         items: supervisorCapacityGeneralItems.map((item) => ({
           id: item.id,
-          label: item.text.substring(0, 50) + '...',
+          label: item.text.substring(0, 40) + '...',
           sectionName: 'Supervisor Capacity',
           isComplete: formValues.supervisorCapacity.generalItems[item.id] !== null,
           content: (
-            <div className="p-4 bg-rose-50 rounded-xl border border-rose-200">
-              <h4 className="font-medium text-rose-800 mb-2">Supervisor Capacity Item</h4>
-              <p className="text-gray-700">{item.text}</p>
-              <p className="text-xs text-gray-500 mt-2">Rate the capacity level for this item</p>
-            </div>
+            <FocusModeRatingControl
+              questionText={item.text}
+              questionType="Supervisor Capacity"
+              options={CAPACITY_FOCUS_OPTIONS}
+              value={formValues.supervisorCapacity.generalItems[item.id]}
+              onChange={(value) => setValue(`supervisorCapacity.generalItems.${item.id}` as never, value as never)}
+              helperText="Rate the supervisor's capacity in this area"
+            />
           ),
         })),
       },
     ]
-  }, [formValues])
+  }, [formValues, methods])
 
   const handleFocusModeSection = useCallback((sectionId: string) => {
     setCurrentSection(sectionId as SectionId)
