@@ -2,7 +2,6 @@
 // App-Level Types
 // ========================================
 
-export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity'
 export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity' | 'core_intervention'
 
 export interface FormTypeInfo {
