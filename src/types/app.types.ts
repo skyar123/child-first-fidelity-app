@@ -3,6 +3,7 @@
 // ========================================
 
 export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity'
+export type FormType = 'foundational' | 'supervision' | 'termination' | 'care_coordinator' | 'program_fidelity' | 'core_intervention'
 
 export interface FormTypeInfo {
   id: FormType
@@ -58,6 +59,15 @@ export const FORM_TYPES: FormTypeInfo[] = [
     description: 'Child First Program Fidelity assessment',
     color: 'purple',
     icon: '📊',
+    available: true
+  },
+  {
+    id: 'core_intervention',
+    name: 'Core Intervention Phase',
+    shortName: 'Core',
+    description: 'Core Intervention Phase fidelity assessment for CPP',
+    color: 'teal',
+    icon: '🎯',
     available: true
   }
 ]

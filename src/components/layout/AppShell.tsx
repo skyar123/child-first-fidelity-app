@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Header } from './Header'
 import { Navigation, type SectionId } from './Navigation'
@@ -8,6 +8,16 @@ import { useCaseManager, useSectionNavigation } from '@/hooks'
 import { useFormContext } from 'react-hook-form'
 import type { FormData } from '@/types/form.types'
 import { generatePDF } from '@/utils/pdfExport'
+import {
+  GlobalFocusMode,
+  type FocusModeSection,
+  FocusModeRatingControl,
+  FocusModeCheckboxControl,
+  CHALLENGE_OPTIONS,
+  CAPACITY_OPTIONS
+} from '@/components/ui'
+import { fidelityStrands } from '@/data/fidelityItems'
+import { assessmentSections, isItemVisible } from '@/data/assessmentItems'
 
 // Section IDs in order for navigation
 const SECTION_ORDER: SectionId[] = [
@@ -80,6 +90,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
   const [currentSection, setCurrentSection] = useState<SectionId>('demographics')
   const [navOpen, setNavOpen] = useState(false)
   const [caseSelectorOpen, setCaseSelectorOpen] = useState(false)
+  const [showFocusMode, setShowFocusMode] = useState(false)
 
   const {
     cases,
@@ -92,8 +103,9 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
     importCase,
   } = useCaseManager()
 
-  const { watch } = useFormContext<FormData>()
+  const { watch, setValue } = useFormContext<FormData>()
   const clientInitials = watch('caseIdentification.clientInitials')
+  const formValues = watch()
 
   // Keyboard navigation for sections
   const currentSectionIndex = SECTION_ORDER.indexOf(currentSection)
@@ -155,6 +167,196 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
   const caseName = clientInitials || 'New Case'
 
+  // Build focus mode sections for fidelity strands
+  const fidelityFocusSections = useMemo((): FocusModeSection[] => {
+    const sections: FocusModeSection[] = []
+    const fidelityData = formValues?.fidelityStrands as unknown as Record<string, { challengeItems?: Record<string, number | null>; capacityItems?: Record<string, number | null> }> | undefined
+
+    // Add Fidelity Strands section
+    fidelityStrands.forEach((strand) => {
+      const strandData = fidelityData?.[strand.id]
+      const strandItems = [
+        // Challenge items with interactive controls
+        ...strand.challengeItems.map((item) => {
+          const fieldPath = `fidelityStrands.${strand.id}.challengeItems.${item.id}` as const
+          const currentValue = strandData?.challengeItems?.[item.id] ?? null
+          return {
+            id: `challenge_${item.id}`,
+            label: item.text.substring(0, 40) + '...',
+            sectionName: strand.title,
+            isComplete: currentValue !== null && currentValue !== undefined,
+            content: (
+              <FocusModeRatingControl
+                questionText={item.text}
+                questionType="Challenge Assessment"
+                options={CHALLENGE_OPTIONS}
+                value={currentValue}
+                onChange={(value) => setValue(fieldPath as never, value as never)}
+                helperText="How challenging is this area for the family?"
+              />
+            ),
+          }
+        }),
+        // Capacity items with interactive controls
+        ...strand.capacityItems.map((item) => {
+          const fieldPath = `fidelityStrands.${strand.id}.capacityItems.${item.id}` as const
+          const currentValue = strandData?.capacityItems?.[item.id] ?? null
+          return {
+            id: `capacity_${item.id}`,
+            label: item.text.substring(0, 40) + '...',
+            sectionName: strand.title,
+            isComplete: currentValue !== null && currentValue !== undefined,
+            content: (
+              <FocusModeRatingControl
+                questionText={item.text}
+                questionType="Capacity Assessment"
+                options={CAPACITY_OPTIONS}
+                value={currentValue}
+                onChange={(value) => setValue(fieldPath as never, value as never)}
+                helperText="What is the current capacity level?"
+              />
+            ),
+          }
+        }),
+      ]
+
+      if (strandItems.length > 0) {
+        sections.push({
+          id: strand.id,
+          name: strand.title,
+          items: strandItems,
+        })
+      }
+    })
+
+    return sections
+  }, [formValues, setValue])
+
+  // Build focus mode sections for assessment checklist
+  const assessmentFocusSections = useMemo((): FocusModeSection[] => {
+    const sections: FocusModeSection[] = []
+    const assessmentData = formValues?.assessmentChecklist as unknown as Record<string, unknown> | undefined
+
+    assessmentSections.forEach((section) => {
+      const sectionItems = section.items
+        .filter((item) => isItemVisible(item, (formValues || {}) as unknown as Record<string, unknown>))
+        .map((item) => {
+          const fieldPath = `assessmentChecklist.${item.id}`
+
+          // Handle different item types
+          if (item.type === 'checkbox') {
+            const isChecked = !!assessmentData?.[item.id]
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete: isChecked,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={isChecked}
+                  onChange={(checked) => setValue(fieldPath as never, checked as never)}
+                  isChildFirstOnly={item.childFirstOnly}
+                />
+              ),
+            }
+          } else if (item.type === 'multi-checkbox' && item.subItems) {
+            const itemData = assessmentData?.[item.id] as Record<string, boolean> | undefined
+            const completedCount = item.subItems.filter(sub => itemData?.[sub.id]).length
+            const isComplete = completedCount === item.subItems.length
+
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={isComplete}
+                  onChange={() => {}}
+                  isChildFirstOnly={item.childFirstOnly}
+                  subItems={item.subItems.map((sub) => ({
+                    id: sub.id,
+                    text: sub.text,
+                    isChecked: !!itemData?.[sub.id],
+                    onChange: (checked: boolean) => setValue(`${fieldPath}.${sub.id}` as never, checked as never),
+                  }))}
+                />
+              ),
+            }
+          } else if (item.type === 'radio' && item.options) {
+            const selectedValue = assessmentData?.[item.id] as string | undefined
+            return {
+              id: item.id,
+              label: item.text.substring(0, 40) + '...',
+              sectionName: section.title,
+              isComplete: !!selectedValue,
+              content: (
+                <FocusModeCheckboxControl
+                  questionText={item.text}
+                  questionNumber={item.number}
+                  questionType={section.title}
+                  isChecked={!!selectedValue}
+                  onChange={() => {}}
+                  isChildFirstOnly={item.childFirstOnly}
+                  radioOptions={item.options.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    isSelected: selectedValue === opt.value,
+                    onChange: () => setValue(fieldPath as never, opt.value as never),
+                  }))}
+                />
+              ),
+            }
+          }
+
+          return null
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null)
+
+      if (sectionItems.length > 0) {
+        sections.push({
+          id: `assessment_${section.id}`,
+          name: section.title,
+          items: sectionItems,
+        })
+      }
+    })
+
+    return sections
+  }, [formValues, setValue])
+
+  // Get the appropriate focus mode sections based on current section
+  const focusModeSections = useMemo((): FocusModeSection[] => {
+    if (currentSection === 'assessment') {
+      return assessmentFocusSections
+    }
+    // Default to fidelity sections for fidelity section (or if no specific section match)
+    return fidelityFocusSections
+  }, [currentSection, fidelityFocusSections, assessmentFocusSections])
+
+  // Get the focus mode title based on current section
+  const focusModeTitle = useMemo((): string => {
+    if (currentSection === 'assessment') {
+      return 'Assessment Focus Mode'
+    }
+    return 'Foundational Phase Focus Mode'
+  }, [currentSection])
+
+  const handleFocusModeSection = useCallback((sectionId: string) => {
+    // Map focus mode section IDs to navigation section IDs
+    if (sectionId.startsWith('assessment_')) {
+      setCurrentSection('assessment')
+    } else if (sectionId.startsWith('strand')) {
+      setCurrentSection('fidelity')
+    }
+  }, [])
+
   return (
     <div className="min-h-screen animated-gradient-bg">
       {/* Back button row */}
@@ -177,6 +379,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         onExportPDF={handleExportPDF}
         onOpenCases={() => setCaseSelectorOpen(true)}
         onClearData={handleClearData}
+        onFocusMode={() => setShowFocusMode(true)}
       />
 
       <div className="lg:flex">
@@ -203,6 +406,16 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         onDuplicateCase={duplicateCase}
         onExportCase={handleExportCase}
         onImportCase={handleImportCase}
+      />
+
+      {/* Focus Mode */}
+      <GlobalFocusMode
+        isOpen={showFocusMode}
+        onClose={() => setShowFocusMode(false)}
+        sections={focusModeSections}
+        currentSectionId={focusModeSections[0]?.id}
+        title={focusModeTitle}
+        onSectionChange={handleFocusModeSection}
       />
     </div>
   )

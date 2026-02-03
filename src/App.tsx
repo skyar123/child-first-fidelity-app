@@ -4,6 +4,8 @@ import { FormTypeSelector } from '@/components/layout/FormTypeSelector'
 import { SupervisionAppShell } from '@/components/supervision/SupervisionAppShell'
 import { CareCoordinatorAppShell } from '@/components/carecoordinator/CareCoordinatorAppShell'
 import { TerminationAppShell } from '@/components/termination/TerminationAppShell'
+import { ProgramFidelityAppShell } from '@/components/programfidelity/ProgramFidelityAppShell'
+import { CoreInterventionAppShell } from '@/components/coreintervention/CoreInterventionAppShell'
 import type { FormType } from '@/types/app.types'
 
 function App() {
@@ -32,6 +34,10 @@ function App() {
       return <CareCoordinatorAppShell onBack={handleBack} />
     case 'termination':
       return <TerminationAppShell onBack={handleBack} />
+    case 'program_fidelity':
+      return <ProgramFidelityAppShell onBack={handleBack} />
+    case 'core_intervention':
+      return <CoreInterventionAppShell onBack={handleBack} />
     default:
       // For forms not yet implemented, go back to selector
       setSelectedFormType(null)
