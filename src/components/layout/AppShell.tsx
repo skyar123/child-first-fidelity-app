@@ -168,7 +168,7 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
   // Build focus mode sections from fidelity strands with INTERACTIVE controls
   const focusModeSections = useMemo((): FocusModeSection[] => {
     const sections: FocusModeSection[] = []
-    const fidelityData = formValues?.fidelityStrands as unknown as Record<string, { challenges?: Record<string, string>; capacity?: Record<string, string> }> | undefined
+    const fidelityData = formValues?.fidelityStrands as unknown as Record<string, { challengeItems?: Record<string, number | null>; capacityItems?: Record<string, number | null> }> | undefined
 
     // Add Fidelity Strands section
     fidelityStrands.forEach((strand) => {
@@ -176,13 +176,13 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
       const strandItems = [
         // Challenge items with interactive controls
         ...strand.challengeItems.map((item) => {
-          const fieldPath = `fidelityStrands.${strand.id}.challenges.${item.id}` as const
-          const currentValue = strandData?.challenges?.[item.id] || null
+          const fieldPath = `fidelityStrands.${strand.id}.challengeItems.${item.id}` as const
+          const currentValue = strandData?.challengeItems?.[item.id] ?? null
           return {
             id: `challenge_${item.id}`,
             label: item.text.substring(0, 40) + '...',
             sectionName: strand.title,
-            isComplete: !!currentValue,
+            isComplete: currentValue !== null && currentValue !== undefined,
             content: (
               <FocusModeRatingControl
                 questionText={item.text}
@@ -197,13 +197,13 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
         }),
         // Capacity items with interactive controls
         ...strand.capacityItems.map((item) => {
-          const fieldPath = `fidelityStrands.${strand.id}.capacity.${item.id}` as const
-          const currentValue = strandData?.capacity?.[item.id] || null
+          const fieldPath = `fidelityStrands.${strand.id}.capacityItems.${item.id}` as const
+          const currentValue = strandData?.capacityItems?.[item.id] ?? null
           return {
             id: `capacity_${item.id}`,
             label: item.text.substring(0, 40) + '...',
             sectionName: strand.title,
-            isComplete: !!currentValue,
+            isComplete: currentValue !== null && currentValue !== undefined,
             content: (
               <FocusModeRatingControl
                 questionText={item.text}

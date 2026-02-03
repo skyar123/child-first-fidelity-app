@@ -8,21 +8,21 @@ export interface RatingOption {
   activeColor: string
 }
 
-// Challenge level options (for Foundational form)
+// Challenge level options (for Foundational form) - 0-3 scale
 export const CHALLENGE_OPTIONS: RatingOption[] = [
   { value: null, label: 'Not Rated', color: 'bg-gray-100 text-gray-500 border-gray-200', activeColor: 'bg-gray-200 text-gray-700 border-gray-400' },
-  { value: 'no', label: 'No Challenge', color: 'bg-gray-100 text-gray-600 border-gray-200', activeColor: 'bg-gray-500 text-white border-gray-600' },
-  { value: 'low', label: 'Low', color: 'bg-green-50 text-green-600 border-green-200', activeColor: 'bg-green-500 text-white border-green-600' },
-  { value: 'moderate', label: 'Moderate', color: 'bg-yellow-50 text-yellow-600 border-yellow-200', activeColor: 'bg-yellow-500 text-white border-yellow-600' },
-  { value: 'significant', label: 'Significant', color: 'bg-red-50 text-red-600 border-red-200', activeColor: 'bg-red-500 text-white border-red-600' },
+  { value: 0, label: '0 - No Challenge', color: 'bg-green-50 text-green-600 border-green-200', activeColor: 'bg-green-500 text-white border-green-600' },
+  { value: 1, label: '1 - Low Challenge', color: 'bg-yellow-50 text-yellow-600 border-yellow-200', activeColor: 'bg-yellow-500 text-white border-yellow-600' },
+  { value: 2, label: '2 - Moderate Challenge', color: 'bg-orange-50 text-orange-600 border-orange-200', activeColor: 'bg-orange-500 text-white border-orange-600' },
+  { value: 3, label: '3 - Significant Challenge', color: 'bg-red-50 text-red-600 border-red-200', activeColor: 'bg-red-500 text-white border-red-600' },
 ]
 
-// Capacity level options (for Foundational form)
+// Capacity level options (for Foundational form) - 0-2 scale
 export const CAPACITY_OPTIONS: RatingOption[] = [
   { value: null, label: 'Not Rated', color: 'bg-gray-100 text-gray-500 border-gray-200', activeColor: 'bg-gray-200 text-gray-700 border-gray-400' },
-  { value: 'requires_development', label: 'Requires Development', color: 'bg-red-50 text-red-600 border-red-200', activeColor: 'bg-red-500 text-white border-red-600' },
-  { value: 'emerging', label: 'Emerging', color: 'bg-yellow-50 text-yellow-600 border-yellow-200', activeColor: 'bg-yellow-500 text-white border-yellow-600' },
-  { value: 'acquired', label: 'Acquired', color: 'bg-green-50 text-green-600 border-green-200', activeColor: 'bg-green-500 text-white border-green-600' },
+  { value: 0, label: '0 - Requires Development', color: 'bg-red-50 text-red-600 border-red-200', activeColor: 'bg-red-500 text-white border-red-600' },
+  { value: 1, label: '1 - Emerging', color: 'bg-yellow-50 text-yellow-600 border-yellow-200', activeColor: 'bg-yellow-500 text-white border-yellow-600' },
+  { value: 2, label: '2 - Acquired', color: 'bg-green-50 text-green-600 border-green-200', activeColor: 'bg-green-500 text-white border-green-600' },
 ]
 
 // Yes/No options (for Supervision form)
