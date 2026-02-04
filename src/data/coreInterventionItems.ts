@@ -10,8 +10,9 @@ export type CapacityLevel = 'requires_development' | 'emerging' | 'acquired'
 export type AttendanceStatus = 'no' | 'yes_irregular' | 'yes_attended' | 'not_needed'
 export type ClinicalFocus = 0 | 1 | 2 | 3
 export type Appropriateness = 'under' | 'appropriate' | 'over'
+export type ProgressLevel = 0 | 1 | 2 | 3
 
-// Role-based assessment types
+// Role-based assessment types (Clinician marks with check, CC/FRP marks with X)
 export interface RoleBasedChallenge {
   clinician: ChallengeLevel
   ccFrp: ChallengeLevel
@@ -21,6 +22,101 @@ export interface RoleBasedCapacity {
   clinician: CapacityLevel
   ccFrp: CapacityLevel
 }
+
+// ========================================
+// Registration Form
+// ========================================
+
+export type ChildInvolvementReason =
+  | 'no_consent'
+  | 'unsafe_to_inform'
+  | 'caregiver_capacity'
+  | 'other'
+
+export const CHILD_NOT_INVOLVED_REASONS: { value: ChildInvolvementReason; label: string }[] = [
+  { value: 'no_consent', label: 'Another caregiver has not given consent for child to participate' },
+  { value: 'unsafe_to_inform', label: 'Another caregiver is not aware that child will be participating in a trauma treatment and it would be unsafe to inform caregiver about treatment' },
+  { value: 'caregiver_capacity', label: 'Core intervention phase will at least initially consist of individual meetings with the caregiver to enhance caregiver\'s capacity to acknowledge child\'s experience of trauma and/or to focus on safety' },
+  { value: 'other', label: 'Other (describe below)' }
+]
+
+// ========================================
+// Procedural Fidelity: Introducing the Child to CPP
+// ========================================
+
+export interface IntroducingChildItem {
+  id: string
+  number: number
+  title: string
+  description: string
+  hasTextArea?: boolean
+  textAreaLabel?: string
+  hasSubItems?: boolean
+  subItems?: { id: string; label: string }[]
+}
+
+export const INTRODUCING_CHILD_ITEMS: IntroducingChildItem[] = [
+  {
+    id: 'prepared_session',
+    number: 1,
+    title: 'Prepared for Session: Selected Toys for Treatment',
+    description: 'Ensured that toy bag or playroom had toys related to child\'s traumatic experience (see CPP toy list) as well as toys to help the child and caregiver regulate. For infants, ensured access to toys/materials appropriate given treatment goals.'
+  },
+  {
+    id: 'explained_reason',
+    number: 2,
+    title: 'Explained the Reason for Treatment to Child',
+    description: 'Had a session with the child and caregiver where Clinician discussed the reason for treatment with the child using what was decided during the feedback session as a starting point. If the child is an infant or young toddler, had an introductory session with the child present and discussed the reason for treatment with caregiver, referring back to the young child.',
+    hasTextArea: true,
+    textAreaLabel: '2a. Describe the Way the CPP Triangle of Explanations was Presented in Session',
+    hasSubItems: true,
+    subItems: [
+      { id: 'experience', label: 'Experience:' },
+      { id: 'feelings_behavior', label: 'Feelings/Behavior:' },
+      { id: 'how_treatment_helps', label: 'How Treatment Will Help:' },
+      { id: 'protective_factors', label: 'Protective and Growth Promoting Factors:' }
+    ]
+  },
+  {
+    id: 'tracked_response',
+    number: 3,
+    title: 'Tracked Child Response to Introduction to Treatment',
+    description: '',
+    hasTextArea: true,
+    textAreaLabel: '3a. Describe How Child Responded to Introduction to Treatment (e.g., played out content of trauma, became aggressive, crawled into caregiver\'s lap...)',
+    hasSubItems: true,
+    subItems: [
+      { id: 'young_infant', label: 'Child is a young infant and does not show a response to the introduction' },
+      { id: 'integrated', label: 'Integrated: Emotionally integrated, remained connected to caregiver and/or intervener, able to talk about experience without being overwhelmed' },
+      { id: 'triggered', label: 'Triggered: Became overly active, overwhelmed, clingy' },
+      { id: 'avoidant', label: 'Avoidant: Actively avoided topic, wanted to leave, turned back on intervener' },
+      { id: 'mixed', label: 'Mixed Avoidant & Triggered: Active and overwhelmed and actively avoids thinking about it' },
+      { id: 'other', label: 'Other, make sure you described this above' }
+    ]
+  },
+  {
+    id: 'supported_caregiver',
+    number: 4,
+    title: 'Supported Caregiver During Introduction to Treatment',
+    description: 'Checked in with caregiver to see how s/he understood child\'s response to the introduction to treatment. Provided any emotional support necessary.'
+  },
+  {
+    id: 'benevolent_explanation',
+    number: 5,
+    title: 'Benevolent Explanation for Any Negative Reactions/Behaviors',
+    description: 'During the opening session, provided a benevolent or developmentally-informed explanation to the caregiver for any reactions in the child or caregiver that may be perceived as negative (e.g., child who plays out an aggressive or violent scene)',
+    hasSubItems: true,
+    subItems: [
+      { id: 'na', label: 'N/A' }
+    ]
+  },
+  {
+    id: 'processed_session',
+    number: 6,
+    title: 'Processed Session with Clinical Director/Supervisor or Colleague',
+    description: 'For supervisees: Processed session with Clinical Director. For Clinical Directors and other licensed staff: Processed session with colleague as needed given any feelings or confusion that may have arisen. Check done if reflected alone and no additional support was needed.'
+  }
+]
 
 // ========================================
 // Challenge Items
@@ -148,6 +244,45 @@ export const PROCEDURAL_CHALLENGES: ChallengeItem[] = [
   { id: 'pf_chaotic', text: 'Home visiting environment often chaotic' }
 ]
 
+// New procedural capacity items with three-column response (No / Yes, But They Did Not Attend Regularly / Yes, Attended)
+export interface ProceduralCapacityItem {
+  id: string
+  text: string
+  hasNotNeeded?: boolean
+}
+
+export const PROCEDURAL_CAPACITY_ITEMS_NEW: ProceduralCapacityItem[] = [
+  { id: 'pf_schedule_regular', text: 'Schedule sessions on a regular basis (generally 1x per week)' },
+  { id: 'pf_vacation_notice', text: 'Give appropriate notice for vacation' },
+  { id: 'pf_collateral_sessions', text: 'Propose caregiver collateral sessions when: Caregiver is triggered by child or child\'s play or in need of psychoeducation; Caregiver does not understand trauma as a potential cause of child\'s behaviors; Caregiver needs to share information with Clinician/Care Coordinator (e.g., new traumatic events, new service needs)', hasNotNeeded: true },
+  { id: 'pf_visit_type', text: '*Identify when visits are made individually or as a Team, based on treatment goals being addressed (Child First item)' }
+]
+
+// Child First items for Before/During/After home visits
+export interface HomeVisitChecklistItem {
+  id: string
+  text: string
+  category: 'before' | 'during' | 'after'
+}
+
+export const HOME_VISIT_CHECKLIST: HomeVisitChecklistItem[] = [
+  // Before each home visit
+  { id: 'hv_reviewed_sessions', text: 'Clinical Team reviewed earlier sessions and planned for intervention, including whether visit will be held alone or as a Team', category: 'before' },
+  { id: 'hv_prepared_toys', text: 'Prepared for session by selecting toys/props for treatment, after discussion with Clinical Director/Supervisor, if necessary', category: 'before' },
+  { id: 'hv_practiced_challenging', text: 'Clinical Team discussed and practiced any potentially challenging approaches', category: 'before' },
+  // During all home visits
+  { id: 'hv_not_better_parent', text: 'Clinical Team did not attempt to be a "better parent" by taking over for caregiver during sessions', category: 'during' },
+  { id: 'hv_positive_comments', text: 'Clinical Team made positive comments about child\'s need for and attachment to caregiver', category: 'during' },
+  { id: 'hv_honored_culture', text: 'Clinical Team selected interventions that honored family\'s culture and norms', category: 'during' },
+  { id: 'hv_reflected_culture', text: 'Clinical Team reflected with caregiver on impact of cultural/family roles/norms on dyadic relationships and expectations', category: 'during' },
+  { id: 'hv_team_perception', text: 'Considered how Clinical Team is perceived by family and its impact on treatment', category: 'during' },
+  // After each home visit
+  { id: 'hv_debriefed', text: 'Clinician and Care Coordinator debriefed together. Discussed what each understood about the session, including their individual observations', category: 'after' },
+  { id: 'hv_reassessed', text: 'Clinical Team reassessed their understanding and formulation of the case, discussed differences in perceptions or understanding of session events', category: 'after' },
+  { id: 'hv_planned_next', text: 'Clinical Team planned next intervention session', category: 'after' }
+]
+
+// Legacy export for backward compatibility
 export const PROCEDURAL_CAPACITY_ITEMS: string[] = [
   'Schedule sessions on a regular basis (generally 1x per week)',
   'Give appropriate notice for vacation',
@@ -266,7 +401,7 @@ export const LOCATION_OPTIONS: { value: SessionLocation; label: string }[] = [
 ]
 
 // ========================================
-// CPP Objectives
+// CPP Objectives (with Progress column added)
 // ========================================
 
 export interface CPPObjective {
@@ -302,7 +437,7 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
   {
     id: 'enhance_safety_physical',
     title: 'Enhance Safety - Physical Safety',
-    description: 'Addressing physical safety concerns',
+    description: 'Addressing physical safety concerns (chart all safety risks separately)',
     items: [
       'Helped caregiver reflect on his/her history of physical endangerment and how it shapes current expectations regarding danger and safety',
       'In a supportive, non-confrontational manner, directly addressed safety issues with caregiver with the goal of increasing caregiver awareness and mobilizing protective action',
@@ -408,7 +543,7 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
   },
   {
     id: 'coordinate_care_cf',
-    title: 'Additional Child First Treatment Objectives (Care Coordination)',
+    title: 'Child First Treatment Objectives (Care Coordination)',
     description: 'Child First specific care coordination objectives',
     items: [
       'Responded promptly and thoughtfully to concrete family needs in order to improve quality of life, enhance growth, and reduce stress',
@@ -484,7 +619,7 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
   {
     id: 'attachment_exploration',
     title: 'Attachment-Exploration Balance and Healing Relationship Disruptions',
-    description: 'Supporting attachment and exploration balance',
+    description: 'Child First Treatment Objectives - Supporting attachment and exploration balance',
     items: [
       'Noted and reflected on caregiver\'s prompt, appropriate response to child\'s attachment cues',
       'Provided guidance regarding need of child for proximity to caregiver and for independent exploration. Referred to Circle of Security diagram',
@@ -503,7 +638,7 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
       'Supported healthy non-trauma play',
       'Supported positive identity development',
       'Fostered caregiver\'s efforts to engage in age appropriate activities',
-      'Provided care coordination to help engage child in age appropriate activities (e.g., pre-school)'
+      'Provided care coordination to help engage child in age appropriate activities (e.g., school)'
     ]
   },
   {
@@ -513,43 +648,44 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
     items: [
       'Acknowledged effects of child\'s and caregivers\' experience of trauma and historical trauma',
       'Provided psychoeducation: Impact of trauma, including common symptoms & PTSD, trauma reminders and how they affect child and caregiver',
-      'Linked child and caregiver behavior to trauma and historical trauma',
-      'Provided psychoeducation: Protective role of symptoms',
-      'Identified trauma reminders and related behaviors as they appeared in therapy'
+      'Helped caregiver anticipate developmental changes in child\'s processing of the trauma'
     ]
   },
   {
-    id: 'coconstruct_narrative',
-    title: 'Co-Construct Trauma Narrative',
-    description: 'Building shared understanding of trauma history',
+    id: 'acknowledge_trauma',
+    title: 'Support Dyad in Acknowledging the Impact of Trauma',
+    description: 'Supporting acknowledgment of trauma impact',
     items: [
-      'Reviewed child and caregiver history and co-constructed trauma narrative with caregiver',
-      'Co-constructed developmentally appropriate trauma narrative with child (verbal and/or play)',
-      'Created context for child to share traumatic experiences that encourages their full expression and allows caregiver and child to share emotions, questions, and reassurances',
-      'Linked caregiver\'s history and beliefs to parenting'
+      'Promoted a deep emotional acknowledgement of the impact of trauma while attending and responding to dysregulated (over or under) affective states',
+      'Helped caregiver acknowledge what child has witnessed & remembers',
+      'Helped caregiver and child understand each other\'s reality (with regards to the trauma)',
+      'Helped caregiver & child identify and cope with trauma reminders',
+      'Helped caregiver think about his/her own trauma history (ghosts in the nursery) and ways this history may affect her/him and the way s/he parents'
     ]
   },
   {
-    id: 'address_trauma',
-    title: 'Address Traumatic Play/Behavior/Reenactment',
-    description: 'Working with trauma-related behaviors',
+    id: 'differentiate_then_now',
+    title: 'Help Dyad Differentiate Between Then and Now',
+    description: 'Distinguishing past from present',
     items: [
-      'Helped caregiver recognize the child\'s trauma play, trauma-related behaviors, and/or trauma reenactment',
-      'Helped caregiver (and child when appropriate) understand traumatic play/behavior/reenactment in terms of past experiences',
-      'Helped caregiver (and child when appropriate) understand traumatic play/behavior/reenactment as a sign of the child processing traumatic experiences',
-      'Helped caregiver understand their role in helping child resolve traumatic play',
-      'Intervened when traumatic play did not resolve spontaneously',
-      'Intervened when trauma reenactment was destructive or dangerous'
+      'Highlighted difference between past and present circumstances',
+      'Helped dyad understand that they can make new choices',
+      'Helped child and caregiver become aware of the difference between reliving and remembering by helping them identify traumatic triggers and pointing out the different circumstances in the past and the present'
     ]
   },
   {
-    id: 'maladaptive_coping',
-    title: 'Address Maladaptive Coping',
-    description: 'Working with maladaptive coping strategies',
+    id: 'perspective',
+    title: 'Help Dyad Put the Traumatic Experience in Perspective',
+    description: 'Supporting meaning-making and perspective',
     items: [
-      'Explored ways in which coping strategies were adaptive given caregiver/child history and current circumstances',
-      'Helped child and/or caregiver consider alternate coping strategies',
-      'Supported and fostered use of more adaptive coping strategies'
+      'Supported caregiver and child in making meaning (e.g., creating a story, using ritual, connecting with spiritual beliefs)',
+      'Integrate historical trauma as part of the family and personal narrative',
+      'Worked with beliefs (existential challenges) around why the traumatic events happened (e.g., that they are bad, being punished)',
+      'Helped caregiver and child see trauma as something that happened to them but that does not define them',
+      'Supported family\'s advocacy work or work to help others',
+      'Fostered acceptance around how these experiences have shaped the caregiver and child\'s sense of self',
+      'Helped the family find pathways to post trauma growth and joy',
+      'Encouraged appreciation of goodness, beauty, and hope'
     ]
   }
 ]
@@ -558,6 +694,25 @@ export const CPP_OBJECTIVES: CPPObjective[] = [
 // Form Data Type
 // ========================================
 
+export interface IntroducingChildData {
+  notDone: boolean
+  items: Record<string, boolean>
+  triangleExplanations: {
+    experience: string
+    feelingsBehavior: string
+    howTreatmentHelps: string
+    protectiveFactors: string
+  }
+  childResponseDescription: string
+  emotionalResponses: string[]
+}
+
+export interface RegistrationData {
+  childInvolved: boolean
+  notInvolvedReasons: ChildInvolvementReason[]
+  notInvolvedDescription: string
+}
+
 export interface CoreInterventionFormData {
   identification: {
     clinicalTeamNames: string
@@ -565,8 +720,14 @@ export interface CoreInterventionFormData {
     childFirstSite: string
     monthYear: string
     careLogicId: string
+    dateCorePhaseBegan: string
   }
+  registration: RegistrationData
+  introducingChild: IntroducingChildData
   contactLog: ContactLogEntry[]
+  // Fidelity section completion date and session number
+  fidelityDate: string
+  fidelitySessionNumber: string
   reflectivePractice: {
     challenges: Record<string, RoleBasedChallenge>
     capacity: Record<string, Record<string, RoleBasedCapacity>>
@@ -591,11 +752,13 @@ export interface CoreInterventionFormData {
   }
   proceduralFidelity: {
     challenges: Record<string, RoleBasedChallenge>
-    capacity: Record<string, RoleBasedCapacity>
+    capacity: Record<string, { clinician: AttendanceStatus; ccFrp: AttendanceStatus }>
+    homeVisitChecklist: Record<string, { clinician: boolean; ccFrp: boolean }>
     notes: string
   }
   cppObjectives: Record<string, Record<string, ClinicalFocus>>
   objectiveAppropriateness: Record<string, Appropriateness>
+  objectiveProgress: Record<string, ProgressLevel>
   notes: string
 }
 
@@ -624,9 +787,29 @@ export const DEFAULT_CORE_INTERVENTION_DATA: CoreInterventionFormData = {
     clientInitials: '',
     childFirstSite: '',
     monthYear: '',
-    careLogicId: ''
+    careLogicId: '',
+    dateCorePhaseBegan: ''
+  },
+  registration: {
+    childInvolved: true,
+    notInvolvedReasons: [],
+    notInvolvedDescription: ''
+  },
+  introducingChild: {
+    notDone: false,
+    items: {},
+    triangleExplanations: {
+      experience: '',
+      feelingsBehavior: '',
+      howTreatmentHelps: '',
+      protectiveFactors: ''
+    },
+    childResponseDescription: '',
+    emotionalResponses: []
   },
   contactLog: [createEmptyContactLogEntry()],
+  fidelityDate: '',
+  fidelitySessionNumber: '',
   reflectivePractice: {
     challenges: {},
     capacity: {},
@@ -652,9 +835,11 @@ export const DEFAULT_CORE_INTERVENTION_DATA: CoreInterventionFormData = {
   proceduralFidelity: {
     challenges: {},
     capacity: {},
+    homeVisitChecklist: {},
     notes: ''
   },
   cppObjectives: {},
   objectiveAppropriateness: {},
+  objectiveProgress: {},
   notes: ''
 }

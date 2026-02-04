@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles, Focus } from 'lucide-react'
+import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles, Focus, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
 import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
 import { AllNotesSection, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
 import { GroundingExercise } from '@/components/ui/GroundingExercise'
@@ -13,6 +13,9 @@ import {
   type RoleBasedChallenge,
   type RoleBasedCapacity,
   type Attendee,
+  type ChildInvolvementReason,
+  type ProgressLevel,
+  type AttendanceStatus,
   DEFAULT_CORE_INTERVENTION_DATA,
   CONTACT_TYPES,
   SESSION_STATUS_OPTIONS,
@@ -29,12 +32,17 @@ import {
   TRAUMA_CHALLENGES,
   TRAUMA_CAPACITY_ITEMS,
   PROCEDURAL_CHALLENGES,
-  PROCEDURAL_CAPACITY_ITEMS,
-  CPP_OBJECTIVES
+  PROCEDURAL_CAPACITY_ITEMS_NEW,
+  HOME_VISIT_CHECKLIST,
+  CPP_OBJECTIVES,
+  CHILD_NOT_INVOLVED_REASONS,
+  INTRODUCING_CHILD_ITEMS
 } from '@/data/coreInterventionItems'
 
 type SectionId =
   | 'identification'
+  | 'registration'
+  | 'introducing_child'
   | 'contact_log'
   | 'reflective_practice'
   | 'emotional_process'
@@ -54,6 +62,8 @@ interface Section {
 
 const sections: Section[] = [
   { id: 'identification', label: 'Case Identification', shortLabel: 'ID', icon: FileText },
+  { id: 'registration', label: 'Registration Form', shortLabel: 'Register', icon: ClipboardCheck },
+  { id: 'introducing_child', label: 'Introducing Child to CPP', shortLabel: 'Intro', icon: Baby },
   { id: 'contact_log', label: 'Contact Log', shortLabel: 'Contacts', icon: Calendar },
   { id: 'reflective_practice', label: 'Reflective Practice', shortLabel: 'Reflective', icon: Brain },
   { id: 'emotional_process', label: 'Emotional Process', shortLabel: 'Emotional', icon: Heart },
@@ -186,6 +196,44 @@ function ClinicalFocusSelector({
 }
 
 // ========================================
+// Progress Level Selector Component
+// ========================================
+function ProgressLevelSelector({
+  value,
+  onChange
+}: {
+  value: ProgressLevel
+  onChange: (value: ProgressLevel) => void
+}) {
+  const levels = [
+    { value: 0 as const, label: '0', color: 'bg-red-100 text-red-700', description: 'Primary Target/Urgent Concern' },
+    { value: 1 as const, label: '1', color: 'bg-orange-100 text-orange-700', description: 'Emerging' },
+    { value: 2 as const, label: '2', color: 'bg-yellow-100 text-yellow-700', description: 'Present but Unstable' },
+    { value: 3 as const, label: '3', color: 'bg-green-100 text-green-700', description: 'Established' }
+  ]
+
+  return (
+    <div className="flex gap-1">
+      {levels.map((level) => (
+        <button
+          key={level.value}
+          type="button"
+          onClick={() => onChange(level.value)}
+          title={level.description}
+          className={`w-7 h-7 text-xs rounded-full transition-all ${
+            value === level.value
+              ? level.color + ' ring-2 ring-offset-1 ring-purple-400'
+              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+          }`}
+        >
+          {level.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ========================================
 // Identification Section
 // ========================================
 function IdentificationSection() {
@@ -194,7 +242,7 @@ function IdentificationSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Core Intervention Phase Fidelity</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Child First Fidelity Core Intervention Phase</h2>
         <p className="text-gray-600">Adapted from Child-Parent Psychotherapy</p>
       </div>
 
@@ -250,14 +298,274 @@ function IdentificationSection() {
               placeholder="Enter CareLogic ID"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date Core Intervention Phase Began
+            </label>
+            <input
+              type="date"
+              {...register('identification.dateCorePhaseBegan')}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         <div className="mt-4 p-4 bg-teal-50 rounded-xl border border-teal-200">
-          <p className="text-sm text-teal-800">
-            <strong>Instructions:</strong> Completed by the Clinical Team and reviewed with Clinical Director/Supervisor during reflective supervision.
-            For all Child First sites, to ensure fidelity to trauma-informed CPP and Child First (2 Fidelity cases need to be maintained at all times).
-          </p>
+          <p className="text-sm text-teal-800 font-medium mb-2">When Completed:</p>
+          <ul className="text-sm text-teal-700 space-y-2 list-disc list-inside">
+            <li>The Registration Form and "Procedural Fidelity: Introducing the Child to CPP" form are completed immediately following the session where the child is introduced to CPP.</li>
+            <li>The Contact Log should be completed after each session.</li>
+            <li>The Intervention Fidelity Form should be completed every 3 months (after every 12 CPP sessions).</li>
+          </ul>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ========================================
+// Registration Form Section
+// ========================================
+function RegistrationSection() {
+  const { watch, setValue, register } = useFormContext<CoreInterventionFormData>()
+  const registration = watch('registration')
+  const childInvolved = registration?.childInvolved ?? true
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Registration Form</h2>
+        <p className="text-gray-600">Typically the core intervention phase begins by introducing the child to CPP. In rare circumstances, where safety is a concern, treatment may begin with the caregiver alone.</p>
+      </div>
+
+      <div className="glass-card rounded-xl p-6 space-y-4">
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+            <input
+              type="radio"
+              checked={childInvolved}
+              onChange={() => setValue('registration.childInvolved', true)}
+              className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-sm text-gray-700">Child will be involved in treatment</span>
+          </label>
+          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+            <input
+              type="radio"
+              checked={!childInvolved}
+              onChange={() => setValue('registration.childInvolved', false)}
+              className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-sm text-gray-700">Child will not be involved in treatment</span>
+          </label>
+        </div>
+
+        {!childInvolved && (
+          <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <p className="text-sm font-medium text-amber-800 mb-3">Please indicate reasons why: (check all that apply)</p>
+            <div className="space-y-2">
+              {CHILD_NOT_INVOLVED_REASONS.map((reason) => {
+                const isSelected = registration?.notInvolvedReasons?.includes(reason.value)
+                return (
+                  <label key={reason.value} className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {
+                        const current = registration?.notInvolvedReasons || []
+                        const updated = isSelected
+                          ? current.filter((r: ChildInvolvementReason) => r !== reason.value)
+                          : [...current, reason.value]
+                        setValue('registration.notInvolvedReasons', updated)
+                      }}
+                      className="mt-1 w-4 h-4 text-teal-600 focus:ring-teal-500 rounded"
+                    />
+                    <span className="text-sm text-gray-700">{reason.label}</span>
+                  </label>
+                )
+              })}
+            </div>
+
+            {registration?.notInvolvedReasons?.includes('other') && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Describe any reason for not holding dyadic sessions during core intervention phase:
+                </label>
+                <textarea
+                  {...register('registration.notInvolvedDescription')}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Enter description..."
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ========================================
+// Introducing Child to CPP Section
+// ========================================
+function IntroducingChildSection() {
+  const { watch, setValue, register } = useFormContext<CoreInterventionFormData>()
+  const introducingChild = watch('introducingChild')
+  const notDone = introducingChild?.notDone ?? false
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Procedural Fidelity: Introducing the Child to CPP</h2>
+        <p className="text-gray-600">Complete immediately after the session where the child is introduced to CPP. Within Child First, Introducing the Child to CPP should be done alone by the Clinician with the caregiver and child.</p>
+      </div>
+
+      <div className="glass-card rounded-xl p-6">
+        <label className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors mb-4">
+          <input
+            type="checkbox"
+            checked={notDone}
+            onChange={() => setValue('introducingChild.notDone', !notDone)}
+            className="w-4 h-4 text-amber-600 focus:ring-amber-500 rounded"
+          />
+          <span className="text-sm text-amber-800 font-medium">Not done (child initially not involved in CPP sessions)</span>
+        </label>
+
+        {!notDone && (
+          <div className="space-y-4">
+            {INTRODUCING_CHILD_ITEMS.map((item) => {
+              const isChecked = introducingChild?.items?.[item.id] ?? false
+
+              return (
+                <div key={item.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3 min-w-[60px]">
+                      <span className="text-lg font-bold text-teal-600">#{item.number}</span>
+                      <button
+                        type="button"
+                        onClick={() => setValue(`introducingChild.items.${item.id}`, !isChecked)}
+                        className={`p-2 rounded-lg transition-all ${
+                          isChecked
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-1">{item.title}</h4>
+                      {item.description && (
+                        <p className="text-sm text-gray-600">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Item 2: CPP Triangle of Explanations */}
+                  {item.id === 'explained_reason' && isChecked && (
+                    <div className="mt-4 pl-16 space-y-3">
+                      <p className="text-sm font-medium text-gray-700">{item.textAreaLabel}</p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-teal-700 mb-1">Experience:</label>
+                          <textarea
+                            {...register('introducingChild.triangleExplanations.experience')}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                            placeholder="Describe the experience..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-teal-700 mb-1">Feelings/Behavior:</label>
+                          <textarea
+                            {...register('introducingChild.triangleExplanations.feelingsBehavior')}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                            placeholder="Describe feelings and behaviors..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-teal-700 mb-1">How Treatment Will Help:</label>
+                          <textarea
+                            {...register('introducingChild.triangleExplanations.howTreatmentHelps')}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                            placeholder="Describe how treatment will help..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-teal-700 mb-1">Protective and Growth Promoting Factors:</label>
+                          <textarea
+                            {...register('introducingChild.triangleExplanations.protectiveFactors')}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                            placeholder="Describe protective factors..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Item 3: Child Response */}
+                  {item.id === 'tracked_response' && isChecked && (
+                    <div className="mt-4 pl-16 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{item.textAreaLabel}</label>
+                        <textarea
+                          {...register('introducingChild.childResponseDescription')}
+                          rows={3}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+                          placeholder="Describe how child responded..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">3b. Code Emotional Response (check all that apply)</label>
+                        <div className="space-y-2">
+                          {item.subItems?.map((subItem) => {
+                            const isSubChecked = introducingChild?.emotionalResponses?.includes(subItem.id) ?? false
+                            return (
+                              <label key={subItem.id} className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isSubChecked}
+                                  onChange={() => {
+                                    const current = introducingChild?.emotionalResponses || []
+                                    const updated = isSubChecked
+                                      ? current.filter((r: string) => r !== subItem.id)
+                                      : [...current, subItem.id]
+                                    setValue('introducingChild.emotionalResponses', updated)
+                                  }}
+                                  className="mt-1 w-4 h-4 text-teal-600 focus:ring-teal-500 rounded"
+                                />
+                                <span className="text-sm text-gray-700">{subItem.label}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Item 5: N/A option */}
+                  {item.id === 'benevolent_explanation' && (
+                    <div className="mt-3 pl-16">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={introducingChild?.items?.['benevolent_na'] ?? false}
+                          onChange={() => setValue('introducingChild.items.benevolent_na', !introducingChild?.items?.['benevolent_na'])}
+                          className="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded"
+                        />
+                        <span className="text-sm text-gray-600">N/A</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -291,8 +599,8 @@ function ContactLogSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Contact Log</h2>
-        <p className="text-gray-600">Track all contacts during Core Intervention Phase</p>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Procedural Fidelity: CPP Contact Log</h2>
+        <p className="text-gray-600">Use to track treatment participation during the core intervention phase</p>
       </div>
 
       <div className="glass-card rounded-xl p-6">
@@ -461,6 +769,8 @@ function ContactLogSection() {
 function ReflectivePracticeSection() {
   const { watch, setValue } = useFormContext<CoreInterventionFormData>()
   const reflectivePractice = watch('reflectivePractice') || {}
+  const fidelityDate = watch('fidelityDate')
+  const fidelitySessionNumber = watch('fidelitySessionNumber')
 
   const defaultChallenge: RoleBasedChallenge = { clinician: 'no', ccFrp: 'no' }
   const defaultCapacity: RoleBasedCapacity = { clinician: 'requires_development', ccFrp: 'requires_development' }
@@ -478,14 +788,43 @@ function ReflectivePracticeSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Reflective Practice Fidelity</h2>
-        <p className="text-gray-600">Assess reflective practice challenges and capacity</p>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">CPP Core Intervention Fidelity</h2>
+        <p className="text-gray-600">Complete after every 12 CPP sessions. Clinician marks with check (1st column), Care Coordinator marks with X (2nd column).</p>
+      </div>
+
+      {/* Fidelity Date and Session */}
+      <div className="glass-card rounded-xl p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Completed</label>
+            <input
+              type="date"
+              value={fidelityDate || ''}
+              onChange={(e) => setValue('fidelityDate', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">CPP Session #</label>
+            <input
+              type="text"
+              value={fidelitySessionNumber || ''}
+              onChange={(e) => setValue('fidelitySessionNumber', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
+              placeholder="e.g., 12"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Reflective Practice Fidelity</h3>
       </div>
 
       {/* Challenges */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Reflective Practice Challenges</h3>
-        <p className="text-sm text-gray-600 mb-4">Challenge Level: No Challenge | Low | Moderate | Significant</p>
+        <h3 className="font-semibold text-gray-900 mb-4">Potential Sources of Challenge</h3>
+        <p className="text-sm text-gray-600 mb-4">Level: No | Low | Moderate | Significant</p>
         <div className="space-y-3">
           {REFLECTIVE_PRACTICE_CHALLENGES.map((challenge) => {
             const current = reflectivePractice.challenges?.[challenge.id] || defaultChallenge
@@ -518,8 +857,8 @@ function ReflectivePracticeSection() {
 
       {/* Capacity */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Reflective Practice Capacity</h3>
-        <p className="text-sm text-gray-600 mb-4">Capacity Level: Requires Development (RD) | Emerging (E) | Acquired (A)</p>
+        <h3 className="font-semibold text-gray-900 mb-4">Clinician/Care Coordinator Reflective Practice Capacity</h3>
+        <p className="text-sm text-gray-600 mb-4">Capacity Level: Needs Development (RD) | Emerging (E) | Acquired (A)</p>
         <div className="space-y-4">
           {/* Items with contexts */}
           {['Awareness of own emotional reactions', 'Awareness of own personal and/or cultural biases', "Ability to consider multiple perspectives (caregiver's, child's, own)"].map((item, itemIdx) => {
@@ -649,7 +988,8 @@ function EmotionalProcessSection() {
 
       {/* Challenges */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Emotional Process Challenges</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Potential Sources of Challenge</h3>
+        <p className="text-sm text-gray-600 mb-4">Degree to which in sessions...</p>
         <div className="space-y-3">
           {EMOTIONAL_PROCESS_CHALLENGES.map((challenge) => {
             const current = emotionalProcess.challenges?.[challenge.id] || defaultChallenge
@@ -682,7 +1022,8 @@ function EmotionalProcessSection() {
 
       {/* Capacity */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Emotional Process Capacity</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Capacity to Handle Emotional Challenges</h3>
+        <p className="text-sm text-gray-600 mb-4">Clinician/Care Coordinator is able to...</p>
         <div className="space-y-3">
           {EMOTIONAL_CAPACITY_ITEMS.map((item, index) => {
             const id = `ep_cap_${index}`
@@ -736,7 +1077,8 @@ function DyadicRelationalSection() {
 
       {/* Challenges */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Dyadic-Relational Challenges</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Potential Sources of Challenge</h3>
+        <p className="text-sm text-gray-600 mb-4">Degree to which in the sessions...</p>
         <div className="space-y-3">
           {DYADIC_CHALLENGES.map((challenge) => {
             const current = dyadicRelational.challenges?.[challenge.id] || defaultChallenge
@@ -769,7 +1111,8 @@ function DyadicRelationalSection() {
 
       {/* Capacity */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Dyadic-Relational Capacity</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Capacity to Address the Needs of Caregiver and Child</h3>
+        <p className="text-sm text-gray-600 mb-4">Clinician/Care Coordinator is able to...</p>
         <div className="space-y-3">
           {DYADIC_CAPACITY_ITEMS.map((item, index) => {
             const id = `dr_cap_${index}`
@@ -823,7 +1166,8 @@ function TraumaFrameworkSection() {
 
       {/* Challenges */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Trauma Framework Challenges</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Potential Sources of Challenge</h3>
+        <p className="text-sm text-gray-600 mb-4">Challenges related to...</p>
         <div className="space-y-3">
           {TRAUMA_CHALLENGES.map((challenge) => {
             const current = traumaFramework.challenges?.[challenge.id] || defaultChallenge
@@ -856,11 +1200,13 @@ function TraumaFrameworkSection() {
 
       {/* Capacity */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Trauma Framework Capacity</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Capacity to Intervene Within a Trauma Framework</h3>
+        <p className="text-sm text-gray-600 mb-4">Clinician/Care Coordinator is able to...</p>
         <div className="space-y-3">
           {TRAUMA_CAPACITY_ITEMS.map((item, index) => {
             const id = `tf_cap_${index}`
             const current = traumaFramework.capacity?.[id] || defaultCapacity
+            const isClinicianOnly = item.includes('**Clinicians only:**')
             return (
               <div key={id} className="p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-700 mb-2">{item}</p>
@@ -873,14 +1219,16 @@ function TraumaFrameworkSection() {
                       role="clinician"
                     />
                   </div>
-                  <div>
-                    <span className="text-xs text-purple-600 font-medium">CC/FRP:</span>
-                    <CapacityLevelSelector
-                      value={current.ccFrp}
-                      onChange={(v) => setValue(`traumaFramework.capacity.${id}`, { ...current, ccFrp: v })}
-                      role="ccFrp"
-                    />
-                  </div>
+                  {!isClinicianOnly && (
+                    <div>
+                      <span className="text-xs text-purple-600 font-medium">CC/FRP:</span>
+                      <CapacityLevelSelector
+                        value={current.ccFrp}
+                        onChange={(v) => setValue(`traumaFramework.capacity.${id}`, { ...current, ccFrp: v })}
+                        role="ccFrp"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -899,7 +1247,10 @@ function ProceduralFidelitySection() {
   const proceduralFidelity = watch('proceduralFidelity') || {}
 
   const defaultChallenge: RoleBasedChallenge = { clinician: 'no', ccFrp: 'no' }
-  const defaultCapacity: RoleBasedCapacity = { clinician: 'requires_development', ccFrp: 'requires_development' }
+
+  const beforeItems = HOME_VISIT_CHECKLIST.filter(i => i.category === 'before')
+  const duringItems = HOME_VISIT_CHECKLIST.filter(i => i.category === 'during')
+  const afterItems = HOME_VISIT_CHECKLIST.filter(i => i.category === 'after')
 
   return (
     <div className="space-y-6">
@@ -910,7 +1261,7 @@ function ProceduralFidelitySection() {
 
       {/* Challenges */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Procedural Challenges</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Potential Sources of Challenge</h3>
         <div className="space-y-3">
           {PROCEDURAL_CHALLENGES.map((challenge) => {
             const current = proceduralFidelity.challenges?.[challenge.id] || defaultChallenge
@@ -941,37 +1292,179 @@ function ProceduralFidelitySection() {
         </div>
       </div>
 
-      {/* Capacity */}
+      {/* Capacity to Carry Out Procedures */}
       <div className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Procedural Capacity</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Capacity to Carry Out Procedures</h3>
+        <p className="text-sm text-gray-600 mb-4">Clinician/Care Coordinator is able to... (No / Yes, But Did Not Attend Regularly / Yes, Attended)</p>
         <div className="space-y-3">
-          {PROCEDURAL_CAPACITY_ITEMS.map((item, index) => {
-            const id = `pf_cap_${index}`
-            const current = proceduralFidelity.capacity?.[id] || defaultCapacity
+          {PROCEDURAL_CAPACITY_ITEMS_NEW.map((item) => {
+            const current = proceduralFidelity.capacity?.[item.id] || { clinician: 'no', ccFrp: 'no' }
             return (
-              <div key={id} className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700 mb-2">{item}</p>
+              <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700 mb-2">{item.text}</p>
                 <div className="flex flex-wrap gap-4">
                   <div>
-                    <span className="text-xs text-blue-600 font-medium">Clinician:</span>
-                    <CapacityLevelSelector
-                      value={current.clinician}
-                      onChange={(v) => setValue(`proceduralFidelity.capacity.${id}`, { ...current, clinician: v })}
-                      role="clinician"
-                    />
+                    <span className="text-xs text-blue-600 font-medium block mb-1">Clinician:</span>
+                    <div className="flex gap-1">
+                      {([
+                        { value: 'no' as const, label: 'No', color: 'bg-gray-100 text-gray-600' },
+                        { value: 'yes_irregular' as const, label: 'Yes*', color: 'bg-yellow-100 text-yellow-700' },
+                        { value: 'yes_attended' as const, label: 'Yes', color: 'bg-green-100 text-green-700' },
+                        ...(item.hasNotNeeded ? [{ value: 'not_needed' as const, label: 'N/A', color: 'bg-gray-100 text-gray-500' }] : [])
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setValue(`proceduralFidelity.capacity.${item.id}`, { ...current, clinician: opt.value as AttendanceStatus })}
+                          className={`px-2 py-1 text-xs rounded transition-all ${
+                            current.clinician === opt.value
+                              ? opt.color + ' ring-2 ring-offset-1 ring-blue-400'
+                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <span className="text-xs text-purple-600 font-medium">CC/FRP:</span>
-                    <CapacityLevelSelector
-                      value={current.ccFrp}
-                      onChange={(v) => setValue(`proceduralFidelity.capacity.${id}`, { ...current, ccFrp: v })}
-                      role="ccFrp"
-                    />
+                    <span className="text-xs text-purple-600 font-medium block mb-1">CC/FRP:</span>
+                    <div className="flex gap-1">
+                      {([
+                        { value: 'no' as const, label: 'No', color: 'bg-gray-100 text-gray-600' },
+                        { value: 'yes_irregular' as const, label: 'Yes*', color: 'bg-yellow-100 text-yellow-700' },
+                        { value: 'yes_attended' as const, label: 'Yes', color: 'bg-green-100 text-green-700' },
+                        ...(item.hasNotNeeded ? [{ value: 'not_needed' as const, label: 'N/A', color: 'bg-gray-100 text-gray-500' }] : [])
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setValue(`proceduralFidelity.capacity.${item.id}`, { ...current, ccFrp: opt.value as AttendanceStatus })}
+                          className={`px-2 py-1 text-xs rounded transition-all ${
+                            current.ccFrp === opt.value
+                              ? opt.color + ' ring-2 ring-offset-1 ring-purple-400'
+                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             )
           })}
+        </div>
+      </div>
+
+      {/* Child First Home Visit Checklists */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Child First Home Visit Items (Yes/No)</h3>
+
+        {/* Before */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-teal-700 mb-3 uppercase tracking-wide">Before Each Home Visit</h4>
+          <div className="space-y-2">
+            {beforeItems.map((item) => {
+              const current = proceduralFidelity.homeVisitChecklist?.[item.id] || { clinician: false, ccFrp: false }
+              return (
+                <div key={item.id} className="p-3 bg-gray-50 rounded-lg flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm text-gray-700 flex-1">{item.text}</span>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.clinician}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, clinician: !current.clinician })}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      <span className="text-xs text-blue-600">Clin</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.ccFrp}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, ccFrp: !current.ccFrp })}
+                        className="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded"
+                      />
+                      <span className="text-xs text-purple-600">CC</span>
+                    </label>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* During */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-teal-700 mb-3 uppercase tracking-wide">During All Home Visits</h4>
+          <div className="space-y-2">
+            {duringItems.map((item) => {
+              const current = proceduralFidelity.homeVisitChecklist?.[item.id] || { clinician: false, ccFrp: false }
+              return (
+                <div key={item.id} className="p-3 bg-gray-50 rounded-lg flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm text-gray-700 flex-1">{item.text}</span>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.clinician}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, clinician: !current.clinician })}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      <span className="text-xs text-blue-600">Clin</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.ccFrp}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, ccFrp: !current.ccFrp })}
+                        className="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded"
+                      />
+                      <span className="text-xs text-purple-600">CC</span>
+                    </label>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* After */}
+        <div>
+          <h4 className="text-sm font-semibold text-teal-700 mb-3 uppercase tracking-wide">After Each Home Visit</h4>
+          <div className="space-y-2">
+            {afterItems.map((item) => {
+              const current = proceduralFidelity.homeVisitChecklist?.[item.id] || { clinician: false, ccFrp: false }
+              return (
+                <div key={item.id} className="p-3 bg-gray-50 rounded-lg flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm text-gray-700 flex-1">{item.text}</span>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.clinician}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, clinician: !current.clinician })}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      <span className="text-xs text-blue-600">Clin</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={current.ccFrp}
+                        onChange={() => setValue(`proceduralFidelity.homeVisitChecklist.${item.id}`, { ...current, ccFrp: !current.ccFrp })}
+                        className="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded"
+                      />
+                      <span className="text-xs text-purple-600">CC</span>
+                    </label>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -985,42 +1478,56 @@ function CPPObjectivesSection() {
   const { watch, setValue } = useFormContext<CoreInterventionFormData>()
   const cppObjectives = watch('cppObjectives') || {}
   const appropriateness = watch('objectiveAppropriateness') || {}
+  const progress = watch('objectiveProgress') || {}
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">CPP Objectives</h2>
-        <p className="text-gray-600">Rate clinical focus on each objective (0 = Not addressed, 1-3 = Level of focus)</p>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">CPP Case Conceptualization and Content Fidelity</h2>
+        <div className="text-sm text-gray-600 space-y-1">
+          <p><strong>Clinical Focus:</strong> 0 = Not at all a focus; 1 = Minor; 2 = Moderate; 3 = Significant</p>
+          <p><strong>Appropriateness:</strong> Under = Should have focused more; Appropriate; Over = May have overly focused</p>
+          <p><strong>Progress:</strong> 0 = Primary Target/Urgent; 1 = Emerging; 2 = Present but Unstable; 3 = Established</p>
+        </div>
       </div>
 
       {CPP_OBJECTIVES.map((objective) => (
         <div key={objective.id} className="glass-card rounded-xl p-6">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div>
+            <div className="flex-1">
               <h3 className="font-semibold text-gray-900">{objective.title}</h3>
               <p className="text-sm text-gray-600">{objective.description}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Appropriateness:</span>
-              <div className="flex gap-1">
-                {[
-                  { value: 'under' as const, label: 'Under', color: 'bg-blue-100 text-blue-700' },
-                  { value: 'appropriate' as const, label: 'OK', color: 'bg-green-100 text-green-700' },
-                  { value: 'over' as const, label: 'Over', color: 'bg-red-100 text-red-700' }
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setValue(`objectiveAppropriateness.${objective.id}`, opt.value)}
-                    className={`px-2 py-1 text-xs rounded transition-all ${
-                      appropriateness[objective.id] === opt.value
-                        ? opt.color + ' ring-2 ring-offset-1 ring-teal-400'
-                        : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-20">Appropriate:</span>
+                <div className="flex gap-1">
+                  {[
+                    { value: 'under' as const, label: 'Under', color: 'bg-blue-100 text-blue-700' },
+                    { value: 'appropriate' as const, label: 'OK', color: 'bg-green-100 text-green-700' },
+                    { value: 'over' as const, label: 'Over', color: 'bg-red-100 text-red-700' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setValue(`objectiveAppropriateness.${objective.id}`, opt.value)}
+                      className={`px-2 py-1 text-xs rounded transition-all ${
+                        appropriateness[objective.id] === opt.value
+                          ? opt.color + ' ring-2 ring-offset-1 ring-teal-400'
+                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-20">Progress:</span>
+                <ProgressLevelSelector
+                  value={(progress[objective.id] as ProgressLevel) || 0}
+                  onChange={(v) => setValue(`objectiveProgress.${objective.id}`, v)}
+                />
               </div>
             </div>
           </div>
@@ -1116,12 +1623,13 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
 
     // Check identification fields
     const id = formValues.identification || {}
-    total += 5
+    total += 6
     if (id.clinicalTeamNames) filled++
     if (id.clientInitials) filled++
     if (id.childFirstSite) filled++
     if (id.monthYear) filled++
     if (id.careLogicId) filled++
+    if (id.dateCorePhaseBegan) filled++
 
     // Check contact log
     const contactLog = formValues.contactLog || []
@@ -1159,7 +1667,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
         id: `${section.id}_overview`,
         label: section.label,
         sectionName: section.shortLabel,
-        isComplete: false, // Simplified
+        isComplete: false,
         content: (
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-200">
             <h4 className="font-medium text-teal-800 mb-2">{section.label}</h4>
@@ -1178,6 +1686,10 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
     switch (currentSection) {
       case 'identification':
         return <IdentificationSection />
+      case 'registration':
+        return <RegistrationSection />
+      case 'introducing_child':
+        return <IntroducingChildSection />
       case 'contact_log':
         return <ContactLogSection />
       case 'reflective_practice':
