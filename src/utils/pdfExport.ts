@@ -3,8 +3,9 @@ import autoTable from 'jspdf-autotable'
 import type { FormData } from '@/types/form.types'
 import { fidelityStrands, CHALLENGE_RATING_LABELS, CAPACITY_RATING_LABELS } from '@/data/fidelityItems'
 import { assessmentSections } from '@/data/assessmentItems'
-import { cppObjectives, CLINICAL_FOCUS_LABELS, PROGRESS_LABELS } from '@/data/cppObjectives'
+import { cppObjectives } from '@/data/cppObjectives'
 import { homeVisitSections } from '@/data/homeVisitItems'
+import { formulationChecklistSections } from '@/data/formulationItems'
 
 // Extend jsPDF type for autoTable
 declare module 'jspdf' {
@@ -185,7 +186,7 @@ export function generatePDF(formData: FormData): void {
 
     // Summary stats
     const totalSessions = formData.contactLog.length
-    const completedSessions = formData.contactLog.filter(c => c.sessionStatus === 'completed').length
+    const completedSessions = formData.contactLog.filter(c => c.sessionStatus === 'show').length
     const totalTime = formData.contactLog.reduce((sum, c) => sum + (c.sessionDuration || 0), 0)
 
     addSubsectionHeader('Summary')
@@ -302,22 +303,33 @@ export function generatePDF(formData: FormData): void {
 
   addSectionHeader('FORMULATION & TREATMENT PLANNING')
 
-  const formulationFields = [
-    { label: 'Presenting Problems', value: formData.formulation.presentingProblems },
-    { label: 'Trauma History', value: formData.formulation.traumaHistory },
-    { label: 'Developmental History', value: formData.formulation.developmentalHistory },
-    { label: 'Family Context', value: formData.formulation.familyContext },
-    { label: 'Strengths', value: formData.formulation.strengths },
-    { label: 'Treatment Goals', value: formData.formulation.treatmentGoals },
-    { label: 'Intervention Plan', value: formData.formulation.interventionPlan },
-  ]
+  for (const section of formulationChecklistSections) {
+    checkPageBreak(30)
+    addSubsectionHeader(section.title)
 
-  for (const field of formulationFields) {
+    const rows = section.items.map(item => {
+      const checked = formData.formulation?.items?.[item.id]
+      return [`${item.number}. ${item.label}`, checked ? 'Yes' : '']
+    })
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Item', 'Response']],
+      body: rows,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [147, 51, 234] }, // purple
+      columnStyles: { 0: { cellWidth: 140 }, 1: { cellWidth: 20, halign: 'center' } }
+    })
+
+    yPos = doc.lastAutoTable.finalY + 8
+  }
+
+  if (formData.formulation?.notes) {
     checkPageBreak(25)
-    addSubsectionHeader(field.label)
+    addSubsectionHeader('Formulation Notes')
     doc.setFontSize(9)
-    const text = field.value || 'Not documented'
-    const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
+    const lines = doc.splitTextToSize(formData.formulation.notes, pageWidth - margin * 2)
     doc.text(lines, margin, yPos)
     yPos += lines.length * 4 + 8
   }
@@ -387,7 +399,7 @@ export function generatePDF(formData: FormData): void {
 
     const rows = section.items.map(item => {
       const checked = formData.homeVisit[section.id]?.[item.id]
-      return [item.label, checked ? '✓' : '']
+      return [`${item.number}. ${item.label}`, checked ? 'Yes' : '']
     })
 
     autoTable(doc, {
@@ -409,29 +421,36 @@ export function generatePDF(formData: FormData): void {
   doc.addPage()
   yPos = 20
 
-  addSectionHeader('CPP TREATMENT OBJECTIVES')
+  addSectionHeader('CPP CASE CONCEPTUALIZATION AND CONTENT FIDELITY')
 
   const objectiveRows = cppObjectives.map(obj => {
     const data = formData.cppObjectives.objectives[obj.id]
-    return [
-      `${obj.number}. ${obj.title}`,
+    const focus =
       data?.clinicalFocus !== null && data?.clinicalFocus !== undefined
-        ? CLINICAL_FOCUS_LABELS[data.clinicalFocus]
-        : 'Not rated',
-      data?.progress !== null && data?.progress !== undefined && data?.progress !== 'na'
-        ? PROGRESS_LABELS[data.progress]
-        : 'N/A'
-    ]
+        ? `${data.clinicalFocus}`
+        : ''
+    const appropriateness = data?.appropriateness
+      ? data.appropriateness.charAt(0).toUpperCase() + data.appropriateness.slice(1)
+      : ''
+    const referral =
+      data?.progressReferral !== null && data?.progressReferral !== undefined
+        ? `${data.progressReferral}`
+        : ''
+    const current =
+      data?.progressCurrent !== null && data?.progressCurrent !== undefined
+        ? `${data.progressCurrent}`
+        : ''
+    return [obj.title, focus, appropriateness, referral, current]
   })
 
   autoTable(doc, {
     startY: yPos,
-    head: [['Objective', 'Clinical Focus', 'Progress']],
+    head: [['Objective', 'Focus (0-3)', 'Appropriateness', 'Progress Referral', 'Progress Current']],
     body: objectiveRows,
     margin: { left: margin, right: margin },
     styles: { fontSize: 8 },
     headStyles: { fillColor: [99, 102, 241] }, // indigo
-    columnStyles: { 0: { cellWidth: 100 } }
+    columnStyles: { 0: { cellWidth: 90 } }
   })
 
   // Save the PDF

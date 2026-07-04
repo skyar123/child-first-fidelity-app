@@ -16,6 +16,7 @@ import { assessmentSections, isItemVisible } from '@/data/assessmentItems'
 import { traumaFeedbackSections } from '@/data/traumaFeedbackItems'
 import { homeVisitSections } from '@/data/homeVisitItems'
 import { cppObjectives } from '@/data/cppObjectives'
+import { formulationChecklistSections, getTotalFormulationItems } from '@/data/formulationItems'
 import { careCoordinatorSections } from '@/data/careCoordinatorItems'
 import { calculateProgramFidelityProgress } from '@/data/programFidelityItems'
 import type { FormData, Progress, SectionProgress, CareCoordinatorItemValue } from '@/types/form.types'
@@ -221,18 +222,16 @@ function calculateTraumaFeedbackProgress(formValues: FormData): number {
 }
 
 function calculateFormulationProgress(formValues: FormData): number {
-  const fields = [
-    formValues.formulation.presentingProblems,
-    formValues.formulation.traumaHistory,
-    formValues.formulation.developmentalHistory,
-    formValues.formulation.familyContext,
-    formValues.formulation.strengths,
-    formValues.formulation.treatmentGoals,
-    formValues.formulation.interventionPlan,
-  ]
-
-  const filled = fields.filter((f) => f !== '' && f !== null && f !== undefined)
-  return Math.round((filled.length / fields.length) * 100)
+  const total = getTotalFormulationItems()
+  if (total === 0) return 0
+  const items = formValues.formulation?.items || {}
+  let completed = 0
+  for (const section of formulationChecklistSections) {
+    for (const item of section.items) {
+      if (items[item.id] === true) completed++
+    }
+  }
+  return Math.round((completed / total) * 100)
 }
 
 function calculateHomeVisitProgress(formValues: FormData): number {

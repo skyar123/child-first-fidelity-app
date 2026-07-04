@@ -159,14 +159,12 @@ export interface TraumaFeedback {
 // Formulation & Planning
 // ========================================
 
+// Formulation and Treatment Planning Session + Plan of Care checklists
+// (green form items 1-3, CF16-CF23). Checked = "Yes" on the paper form.
 export interface FormulationPlanning {
-  presentingProblems: string
-  traumaHistory: string
-  developmentalHistory: string
-  familyContext: string
-  strengths: string
-  treatmentGoals: string
-  interventionPlan: string
+  items: Record<string, boolean>
+  // Free-text formulation notes (app extension, not on the official form)
+  notes: string
 }
 
 // ========================================
@@ -202,15 +200,18 @@ export interface HomeVisitChecklists {
 // CPP Objectives
 // ========================================
 
+// Ratings per the official CPP Case Conceptualization and Content Fidelity
+// grid: Clinical Focus 0-3; Appropriateness Under/Appropriate/Over;
+// Progress Towards Objective 0-3 at Referral and Current (end of phase).
 export type ClinicalFocusRating = 0 | 1 | 2 | 3 | null
-export type AppropriatenessRating = 'appropriate' | 'not_appropriate' | 'na' | null
-export type ProgressRating = 'significant' | 'moderate' | 'minimal' | 'none' | 'na' | null
+export type AppropriatenessRating = 'under' | 'appropriate' | 'over' | null
+export type ProgressRating = 0 | 1 | 2 | 3 | null
 
 export interface CPPObjective {
   clinicalFocus: ClinicalFocusRating
   appropriateness: AppropriatenessRating
-  progress: ProgressRating
-  interventions: string[]
+  progressReferral: ProgressRating
+  progressCurrent: ProgressRating
   notes: string
 }
 
