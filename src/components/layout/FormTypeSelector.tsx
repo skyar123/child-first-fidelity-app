@@ -73,6 +73,10 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
           <p className="text-gray-600 max-w-lg mx-auto text-lg">
             Select a fidelity form to begin. Your progress is automatically saved.
           </p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-sm mt-3">
+            The fidelity forms are meant to generate a deep, reflective conversation in supervision
+            about the work with a family — not to serve only as a checklist of completed tasks.
+          </p>
         </div>
 
         {/* Fidelity case dashboard: cadence, 2-case rule, backup */}
