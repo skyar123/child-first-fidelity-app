@@ -1,4 +1,4 @@
-import { useFormContext, Controller } from 'react-hook-form'
+import { useFormContext, Controller, type FieldPath } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { AlertTriangle, Check } from 'lucide-react'
 import { unplannedTerminationItems } from '@/data/terminationItems'
@@ -65,7 +65,7 @@ export function UnplannedTerminationSection() {
           {unplannedTerminationItems.map((item) => (
             <Controller
               key={item.id}
-              name={`unplannedTermination.items.${item.id}` as any}
+              name={`unplannedTermination.items.${item.id}` as FieldPath<TerminationFormData>}
               control={control}
               render={({ field }) => (
                 <div className="p-4 hover:bg-gray-50 transition-colors">

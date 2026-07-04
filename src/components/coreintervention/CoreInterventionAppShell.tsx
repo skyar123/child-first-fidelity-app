@@ -1713,7 +1713,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
             </div>
             <AllNotesSection
               notes={[]}
-              onNavigateToQuestion={(sectionId, _questionId) => {
+              onNavigateToQuestion={(sectionId) => {
                 setCurrentSection(sectionId as SectionId)
               }}
             />

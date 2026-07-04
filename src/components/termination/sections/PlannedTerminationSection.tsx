@@ -1,4 +1,4 @@
-import { useFormContext, Controller } from 'react-hook-form'
+import { useFormContext, Controller, type FieldPath } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { ClipboardCheck, Check } from 'lucide-react'
 import { plannedTerminationItems } from '@/data/terminationItems'
@@ -94,7 +94,7 @@ export function PlannedTerminationSection() {
           {plannedTerminationItems.map((item) => (
             <Controller
               key={item.id}
-              name={`plannedTermination.items.${item.id}` as any}
+              name={`plannedTermination.items.${item.id}` as FieldPath<TerminationFormData>}
               control={control}
               render={({ field }) => (
                 <div className="p-4 hover:bg-gray-50 transition-colors">
@@ -117,7 +117,7 @@ export function PlannedTerminationSection() {
                       {/* Less than option */}
                       {item.hasLessThanOption && (
                         <Controller
-                          name={`plannedTermination.items.${item.id.replace('_', '_lessThan').replace('planned', 'lessThan2Months').replace('told', 'lessThan1Month')}` as any}
+                          name={`plannedTermination.items.${item.id.replace('_', '_lessThan').replace('planned', 'lessThan2Months').replace('told', 'lessThan1Month')}` as FieldPath<TerminationFormData>}
                           control={control}
                           render={({ field: ltField }) => (
                             <label className="flex items-center gap-2 mt-2 ml-8 cursor-pointer">

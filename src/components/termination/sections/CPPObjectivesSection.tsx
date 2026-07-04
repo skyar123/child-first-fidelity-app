@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, type FieldPath } from 'react-hook-form'
 import { TerminationFormData } from '../../../types/termination.types';
 
 // Clinical Focus options (0-3)
@@ -59,11 +59,12 @@ const ObjectiveField: React.FC<ObjectiveFieldProps> = ({
               Clinical Focus (0-3)
             </label>
             <Controller
-              name={`${fieldPath}.clinicalFocus` as any}
+              name={`${fieldPath}.clinicalFocus` as FieldPath<TerminationFormData>}
               control={control}
               render={({ field }) => (
                 <select
                   {...field}
+                  value={(field.value as string) ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                 >
                   {clinicalFocusOptions.map((opt) => (
@@ -81,11 +82,12 @@ const ObjectiveField: React.FC<ObjectiveFieldProps> = ({
               Appropriateness
             </label>
             <Controller
-              name={`${fieldPath}.appropriateness` as any}
+              name={`${fieldPath}.appropriateness` as FieldPath<TerminationFormData>}
               control={control}
               render={({ field }) => (
                 <select
                   {...field}
+                  value={(field.value as string) ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                 >
                   {appropriatenessOptions.map((opt) => (
@@ -103,11 +105,12 @@ const ObjectiveField: React.FC<ObjectiveFieldProps> = ({
               Progress Current (0-3)
             </label>
             <Controller
-              name={`${fieldPath}.progressCurrent` as any}
+              name={`${fieldPath}.progressCurrent` as FieldPath<TerminationFormData>}
               control={control}
               render={({ field }) => (
                 <select
                   {...field}
+                  value={(field.value as string) ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                 >
                   {progressOptions.map((opt) => (
