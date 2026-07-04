@@ -1,4 +1,5 @@
 import { FORM_TYPES, FORM_GROUP_LABELS, type FormType, type FormTypeInfo, type FormGroup } from '@/types/app.types'
+import { FidelityDashboard } from './FidelityDashboard'
 import { ChevronRight, Lock, Sparkles } from 'lucide-react'
 
 interface FormTypeSelectorProps {
@@ -73,6 +74,9 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
             Select a fidelity form to begin. Your progress is automatically saved.
           </p>
         </div>
+
+        {/* Fidelity case dashboard: cadence, 2-case rule, backup */}
+        <FidelityDashboard />
 
         {/* Form Type Grids, grouped by instrument set */}
         {(['post_rostering', 'cpp_2015'] as FormGroup[]).map(group => (
