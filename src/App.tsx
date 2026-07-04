@@ -6,7 +6,8 @@ import { CareCoordinatorAppShell } from '@/components/carecoordinator/CareCoordi
 import { TerminationAppShell } from '@/components/termination/TerminationAppShell'
 import { ProgramFidelityAppShell } from '@/components/programfidelity/ProgramFidelityAppShell'
 import { CoreInterventionAppShell } from '@/components/coreintervention/CoreInterventionAppShell'
-import type { FormType } from '@/types/app.types'
+import { TemplateFormShell } from '@/components/templateform/TemplateFormShell'
+import { getFormTypeInfo, type FormType } from '@/types/app.types'
 
 function App() {
   const [selectedFormType, setSelectedFormType] = useState<FormType | null>(null)
@@ -24,7 +25,13 @@ function App() {
     return <FormTypeSelector onSelectFormType={handleSelectFormType} />
   }
 
-  // Route to the appropriate form
+  // Template-driven instruments (POST ROSTERING set + Program 2025)
+  const info = getFormTypeInfo(selectedFormType)
+  if (info?.templateId) {
+    return <TemplateFormShell templateId={info.templateId} onBack={handleBack} />
+  }
+
+  // Bespoke 2015-instrument modules
   switch (selectedFormType) {
     case 'foundational':
       return <AppShell onBack={handleBack} />

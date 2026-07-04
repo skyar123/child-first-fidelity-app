@@ -1,4 +1,4 @@
-import { FORM_TYPES, type FormType, type FormTypeInfo } from '@/types/app.types'
+import { FORM_TYPES, FORM_GROUP_LABELS, type FormType, type FormTypeInfo, type FormGroup } from '@/types/app.types'
 import { ChevronRight, Lock, Sparkles } from 'lucide-react'
 
 interface FormTypeSelectorProps {
@@ -74,9 +74,15 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
           </p>
         </div>
 
-        {/* Form Type Grid */}
+        {/* Form Type Grids, grouped by instrument set */}
+        {(['post_rostering', 'cpp_2015'] as FormGroup[]).map(group => (
+        <div key={group} className="mb-10">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-800">{FORM_GROUP_LABELS[group].title}</h2>
+            <p className="text-sm text-gray-600 mt-1 max-w-2xl">{FORM_GROUP_LABELS[group].description}</p>
+          </div>
         <div className="grid md:grid-cols-2 gap-5">
-          {FORM_TYPES.map((formType) => (
+          {FORM_TYPES.filter(ft => ft.group === group).map((formType) => (
             <button
               key={formType.id}
               onClick={() => handleClick(formType)}
@@ -131,6 +137,8 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
             </button>
           ))}
         </div>
+        </div>
+        ))}
 
         {/* Footer */}
         <div className="text-center mt-10">
