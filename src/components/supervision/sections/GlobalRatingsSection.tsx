@@ -118,9 +118,12 @@ export function GlobalRatingsSection() {
               <Star className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Global Ratings</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Global Clinical Director/Supervisor Ratings
+              </h2>
               <p className="text-sm text-gray-500">
-                Overall assessment of supervisor's CPP knowledge and skills
+                Completed every four months — overall assessment of supervisor's CPP knowledge and
+                skills
               </p>
             </div>
           </div>

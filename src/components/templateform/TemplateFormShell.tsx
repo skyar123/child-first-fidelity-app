@@ -187,7 +187,7 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
                   onChange={e => onChange({ ...value, na: e.target.checked, checked: false })}
                   className="h-4 w-4 rounded border-gray-300 text-gray-500 focus:ring-gray-400"
                 />
-                <span className="text-sm text-gray-500">N/A</span>
+                <span className="text-sm text-gray-500">{item.naLabel || 'N/A'}</span>
               </label>
             )}
             {item.flagLabel && (

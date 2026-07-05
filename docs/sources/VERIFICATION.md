@@ -1,5 +1,39 @@
 # Transcription Verification
 
+## July 2026 — verification against practitioner-uploaded authoritative copies
+
+The app was re-verified item-by-item against copies of the documents uploaded
+directly by the practitioner (the versions actually in use at the site):
+Fidelity Forms Cheat Sheet (© 2016), V Supervision (pink, 2015), IV Termination
+(yellow, 2015 rev. 7.9.2018), and III Care Coordinator Interventions (July 2018).
+
+Results:
+- **Cheat sheet (© 2016)** — cadences match the app (A&E throughout phase,
+  Core/CC/Supervision every 3 months, Termination at end; contact log after
+  each session; Supervision completed individually). ✅
+- **V Supervision (pink)** — procedural items, all capacity/knowledge/skills
+  items (incl. Clinician-only and Care-Coordinator-only), Could Do Less/More/
+  Appropriate/Strength scale, Global Ratings (Not at all → Extremely), and the
+  CPP Supervision Log columns (date, # supervisees, minutes, % clinical vs
+  administrative, counter, notes) all match. **Fixed:** Global Ratings header
+  now carries the form's "Completed every four months" note.
+- **IV Termination (yellow)** — closing form items 1–7 (incl. transfer-to-
+  another-CPP-Clinician), planned termination numbering CF1, 1, CF2, CF3, 2
+  (<2 mo), 3, 4, 10, 5 (<1 mo), 6, 7, 8, 9, CF4, CF5, 11, 12, unplanned
+  CF6–CF10, contact log, five strands, and the objectives grid (Clinical Focus /
+  Under-Appropriate-Over / Progress Current) all match. **Fixed:** the
+  reference CLOSING_REASONS list now includes "Completed treatment" (the UI
+  already rendered it via a dedicated field).
+- **III Care Coordinator (July 2018)** — all sections/items match, including
+  "Done / N/A or UTD" response columns, the Baseline/6-Months/Termination ×
+  In-Process/Completed/Entered assessment tracking grid, and CC/FRP role
+  language. **Improved:** the form is now also available as a template
+  instrument (`cc_interventions`) in the Current Instruments group, so the
+  CC/FRP gets one record per 90-day cycle, cadence tracking on the dashboard,
+  review status, and PDF export — matching the "every 3 months thereafter"
+  requirement that the single-record legacy module could not represent.
+
+
 Item-by-item checks of app content against the official source documents.
 Convention used throughout the app: where the paper form offers Yes/No columns
 for procedure items, a **checked box records "Yes"**; unchecked means not yet
