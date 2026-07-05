@@ -19,7 +19,13 @@ personal digitization aid; the instruments remain the property of their authors.
 | V. Supervision Fidelity 2015 – Pink fillable | `supervision` | `V SUPERVISION FIDELITY 2015-Pink fillable.pdf` (this folder) |
 | Child First Program Fidelity Checklist – REVISED Oct 2019 | `program_fidelity` | `cy2_Child First Program Fidelity Checklist - REVISED Oct 2019.pdf` (this folder) |
 
-## POST ROSTERING instrument set (© Child First 2018 — current per Cheat Sheet v. 11/7/25)
+## POST ROSTERING instrument set (© Child First 2018)
+
+> **Not implemented in the app.** The practitioner's site uses the 2015-era
+> set above (confirmed by their uploaded copies and the © 2016 cheat sheet), so
+> the Post-Rostering editions and the Program Fidelity Checklists were removed
+> from the UI to eliminate duplicate versions of every form. The transcriptions
+> remain in git history (PR #17/#18) if a site ever switches instruments.
 
 | Instrument | App template | Source (Drive) |
 |---|---|---|

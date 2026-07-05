@@ -13,7 +13,6 @@ import {
   exportRecords,
   importRecords,
 } from '@/utils/templateStorage'
-import { computeDashboard, computeCaseCadence, CYCLE_DAYS, DAY_MS } from '@/utils/cadence'
 import { createBackup, restoreBackup } from '@/utils/backup'
 
 beforeEach(() => {
@@ -22,13 +21,13 @@ beforeEach(() => {
 
 describe('templateStorage', () => {
   it('creates, lists, updates, and deletes records', () => {
-    const record = createRecord('pr_foundational', 'POST ROSTERING July 2018', 'ab')
+    const record = createRecord('cc_interventions', 'July 2018', 'ab')
     expect(record.clientInitials).toBe('AB')
     expect(record.caseId).toBe('AB')
     expect(record.status).toBe('in_progress')
 
-    expect(listRecords('pr_foundational')).toHaveLength(1)
-    expect(listRecords('pr_termination')).toHaveLength(0)
+    expect(listRecords('cc_interventions')).toHaveLength(1)
+    expect(listRecords('other_template')).toHaveLength(0)
 
     record.values['rp_emotions'] = { clinician: 'in_session', ccFrp: 'in_supervision' }
     expect(updateRecord(record)).toBe(true)
@@ -43,7 +42,7 @@ describe('templateStorage', () => {
   })
 
   it('merges imports by newest updatedAt', () => {
-    const record = createRecord('pr_supervision', 'POST ROSTERING July 2018', 'CD')
+    const record = createRecord('cc_interventions', 'July 2018', 'CD')
     const exported = exportRecords()
 
     // simulate a newer copy of the same record from another device
@@ -66,47 +65,9 @@ describe('templateStorage', () => {
   })
 })
 
-describe('cadence', () => {
-  it('flags the two-case rule', () => {
-    expect(computeDashboard().meetsTwoCaseRule).toBe(false)
-    createRecord('pr_foundational', 'v', 'AA')
-    createRecord('pr_foundational', 'v', 'BB')
-    const dashboard = computeDashboard()
-    expect(dashboard.openCases).toHaveLength(2)
-    expect(dashboard.meetsTwoCaseRule).toBe(true)
-  })
-
-  it('schedules the first 90-day cycle from the A&E form', () => {
-    const record = createRecord('pr_foundational', 'v', 'AA')
-    const cadence = computeCaseCadence('AA', [record], record.createdAt + DAY_MS)
-    expect(cadence.nextDueAt).toBe(record.createdAt + CYCLE_DAYS * DAY_MS)
-    expect(cadence.overdue).toBe(false)
-  })
-
-  it('counts care-coordination forms as 90-day cycle activity', () => {
-    const ae = createRecord('pr_foundational', 'v', 'AA')
-    const cc = createRecord('cc_interventions', 'v', 'AA')
-    const cadence = computeCaseCadence('AA', [ae, cc], cc.createdAt + DAY_MS)
-    expect(cadence.lastCycleAt).toBe(cc.createdAt)
-    expect(cadence.nextDueAt).toBe(cc.createdAt + CYCLE_DAYS * DAY_MS)
-  })
-
-  it('marks overdue cycles and closes cases at termination', () => {
-    const ae = createRecord('pr_foundational', 'v', 'AA')
-    const past = ae.createdAt + (CYCLE_DAYS + 10) * DAY_MS
-    expect(computeCaseCadence('AA', [ae], past).overdue).toBe(true)
-
-    const term = createRecord('pr_termination', 'v', 'AA')
-    const cadence = computeCaseCadence('AA', [ae, term], past)
-    expect(cadence.hasTermination).toBe(true)
-    expect(cadence.nextDueAt).toBeNull()
-    expect(computeDashboard(past).openCases).toHaveLength(0)
-  })
-})
-
 describe('backup', () => {
   it('round-trips app data and rejects foreign keys', () => {
-    createRecord('pr_foundational', 'v', 'AA')
+    createRecord('cc_interventions', 'v', 'AA')
     localStorage.setItem('cpp_fidelity_cases_index', JSON.stringify({ cases: [] }))
     localStorage.setItem('unrelated_key', 'should not travel')
 

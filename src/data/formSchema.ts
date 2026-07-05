@@ -68,20 +68,6 @@ export function createDefaultFormData(_caseId?: string): FormData {
     cppObjectives: {
       objectives: {},
     },
-    careCoordinator: {
-      careCoordinatorName: '',
-      clinicalDirectorName: '',
-      clientInitials: '',
-      childFirstSite: '',
-      date: '',
-      items: {},
-    },
-    programFidelity: {
-      affiliateSiteName: '',
-      dateCompleted: '',
-      ratings: {},
-      comments: {},
-    },
   }
 }
 

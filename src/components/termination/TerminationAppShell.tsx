@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { ArrowLeft, Menu, Download, X, Heart, Sparkles, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
@@ -48,9 +48,11 @@ const sections: Section[] = [
 
 interface TerminationAppShellProps {
   onBack: () => void
+  clientInitials?: string
 }
 
-export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
+export function TerminationAppShell({ onBack, clientInitials }: TerminationAppShellProps) {
+  const storageKey = `cf_form_termination_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('closing')
   const [navOpen, setNavOpen] = useState(false)
   const [showGrounding, setShowGrounding] = useState(false)
@@ -59,9 +61,25 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
   const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<TerminationFormData>({
-    defaultValues: defaultFormData,
+    defaultValues: (() => {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) return { ...defaultFormData, ...JSON.parse(saved) }
+      } catch (error) {
+        console.error('Error loading saved termination form', error)
+      }
+      return defaultFormData
+    })(),
     mode: 'onChange',
   })
+
+  // Auto-save per client
+  useEffect(() => {
+    const subscription = methods.watch(data => {
+      localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return () => subscription.unsubscribe()
+  }, [methods, storageKey])
 
   const { watch } = methods
   const formValues = watch()

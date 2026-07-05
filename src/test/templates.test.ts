@@ -2,20 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { TEMPLATES, getTemplate } from '@/templates'
 
 describe('template registry', () => {
-  it('contains the POST ROSTERING set and the July 2025 program checklist', () => {
-    const ids = TEMPLATES.map(t => t.id)
-    expect(ids).toEqual([
-      'pr_foundational',
-      'pr_core_intervention',
-      'cc_interventions',
-      'pr_termination',
-      'pr_supervision',
-      'program_fidelity_2025',
-    ])
+  it('contains exactly the Care Coordination Interventions instrument', () => {
+    expect(TEMPLATES.map(t => t.id)).toEqual(['cc_interventions'])
   })
 
   it('resolves templates by id', () => {
-    expect(getTemplate('pr_supervision')?.instrument).toContain('Supervision')
+    expect(getTemplate('cc_interventions')?.instrument).toContain('Care Coordination')
     expect(getTemplate('nope')).toBeUndefined()
   })
 
@@ -45,22 +37,11 @@ describe('template registry', () => {
     })
   }
 
-  it('dual-marked instruments are exactly the four clinical PR forms', () => {
-    const dual = TEMPLATES.filter(t => t.dualMarking).map(t => t.id)
-    expect(dual).toEqual([
-      'pr_foundational',
-      'pr_core_intervention',
-      'pr_termination',
-      'pr_supervision',
-    ])
-  })
-
-  it('the treatment themes table appears in Foundational and Core Intervention', () => {
-    for (const id of ['pr_foundational', 'pr_core_intervention']) {
-      const template = getTemplate(id)!
-      const themes = template.sections.find(s => s.id === 'treatment_themes')
-      expect(themes, id).toBeDefined()
-      expect(themes!.items).toHaveLength(13)
-    }
+  it('uses the official "N/A or UTD" response label', () => {
+    const template = getTemplate('cc_interventions')!
+    const withNa = template.sections
+      .flatMap(s => s.items)
+      .filter(i => i.type === 'checkbox' && i.naOption && i.naLabel === 'N/A or UTD')
+    expect(withNa.length).toBeGreaterThan(5)
   })
 })

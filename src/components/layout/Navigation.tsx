@@ -8,13 +8,11 @@ export type SectionId =
   | 'fidelity'
   | 'contactLog'
   | 'assessment'
-  | 'careCoordinator'
   | 'feedback'
   | 'formulation'
   | 'planOfCare'
   | 'homeVisit'
   | 'cppObjectives'
-  | 'programFidelity'
 
 interface Section {
   id: SectionId
@@ -28,13 +26,11 @@ const sections: Section[] = [
   { id: 'fidelity', label: 'Fidelity Strands', shortLabel: 'Fidelity', icon: '🎯' },
   { id: 'contactLog', label: 'Contact Log', shortLabel: 'Contacts', icon: '📞' },
   { id: 'assessment', label: 'Assessment & Engagement', shortLabel: 'Assessment', icon: '🔍' },
-  { id: 'careCoordinator', label: 'III. Care Coordinator', shortLabel: 'Care Coord.', icon: '🤝' },
   { id: 'feedback', label: 'Trauma Feedback Session', shortLabel: 'Feedback', icon: '💬' },
   { id: 'formulation', label: 'Formulation & Planning', shortLabel: 'Formulation', icon: '📝' },
   { id: 'planOfCare', label: 'Plan of Care', shortLabel: 'Plan', icon: '🗺️' },
   { id: 'homeVisit', label: 'Home Visit Checklists', shortLabel: 'Home Visit', icon: '🏠' },
   { id: 'cppObjectives', label: 'CPP Case Conceptualization', shortLabel: 'CPP', icon: '🎓' },
-  { id: 'programFidelity', label: 'Program Fidelity Checklist', shortLabel: 'Program Fidelity', icon: '📊' },
 ]
 
 interface NavigationProps {
@@ -63,8 +59,6 @@ export function Navigation({
         return progress.sections.contactLog
       case 'assessment':
         return progress.sections.assessmentChecklist
-      case 'careCoordinator':
-        return progress.sections.careCoordinator
       case 'feedback':
         return progress.sections.traumaFeedback
       case 'formulation':
@@ -75,8 +69,6 @@ export function Navigation({
         return progress.sections.homeVisitChecklists
       case 'cppObjectives':
         return progress.sections.cppObjectives
-      case 'programFidelity':
-        return progress.sections.programFidelity
       default:
         return 0
     }
