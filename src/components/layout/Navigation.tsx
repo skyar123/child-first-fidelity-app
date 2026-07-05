@@ -1,7 +1,6 @@
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo } from 'react'
 import { X, ChevronRight, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useFormState } from '@/context/FormContext'
-import { getProgressMessage, celebrateCompletion } from '@/utils/celebrations'
 
 export type SectionId =
   | 'demographics'
@@ -47,7 +46,6 @@ export function Navigation({
   onClose,
 }: NavigationProps) {
   const { progress } = useFormState()
-  const prevProgressRef = useRef<Record<string, number>>({})
 
   const getSectionProgress = (sectionId: SectionId): number => {
     switch (sectionId) {
@@ -85,19 +83,6 @@ export function Navigation({
     return null
   }, [progress])
 
-  // Check for section completion and celebrate
-  useEffect(() => {
-    sections.forEach((section) => {
-      const currentProgress = getSectionProgress(section.id)
-      const prevProgress = prevProgressRef.current[section.id] || 0
-      
-      if (currentProgress === 100 && prevProgress < 100 && prevProgress > 0) {
-        celebrateCompletion()
-      }
-      
-      prevProgressRef.current[section.id] = currentProgress
-    })
-  }, [progress])
 
   const handleSectionClick = (sectionId: SectionId) => {
     onSectionChange(sectionId)
@@ -111,7 +96,6 @@ export function Navigation({
     }
   }
 
-  const progressMessage = getProgressMessage(progress.overall)
   const completedSections = sections.filter(s => getSectionProgress(s.id) === 100).length
 
   return (
@@ -185,8 +169,7 @@ export function Navigation({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">{progressMessage.emoji}</span>
-                <span className="font-semibold text-gray-900">{progressMessage.message}</span>
+                <span className="font-semibold text-gray-900">Overall progress</span>
               </div>
               <p className="text-xs text-gray-500">
                 {completedSections} of {sections.length} sections complete

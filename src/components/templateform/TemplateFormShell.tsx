@@ -9,7 +9,6 @@ import {
   setRecordStatus,
 } from '@/utils/templateStorage'
 import { exportTemplateRecordPdf } from '@/utils/pdfExportTemplate'
-import { getCompassStrandForSection } from '@/data/compassPrompts'
 import {
   ArrowLeft,
   Plus,
@@ -19,35 +18,7 @@ import {
   X,
   ClipboardCheck,
   CircleAlert,
-  Compass,
-  ChevronDown,
 } from 'lucide-react'
-
-function CompassHint({ sectionId }: { sectionId: string }) {
-  const [open, setOpen] = useState(false)
-  const strand = getCompassStrandForSection(sectionId)
-  if (!strand) return null
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 text-xs text-sky-700 hover:text-sky-900"
-      >
-        <Compass className="w-3.5 h-3.5" />
-        Reflect — CPP Fidelity Compass: {strand.title}
-        <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <ul className="mt-2 list-disc pl-5 space-y-1 text-xs text-sky-800 bg-sky-50 border border-sky-100 rounded-lg p-3">
-          {strand.prompts.map((p, i) => (
-            <li key={i}>{p}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
 
 // ============================================================
 // Item renderers
@@ -501,7 +472,6 @@ function RecordEditor({
               {section.description && (
                 <p className="text-xs text-gray-500 mt-1">{section.description}</p>
               )}
-              <CompassHint sectionId={section.id} />
             </div>
             <div className="divide-y divide-gray-100">
               {section.items.map(item => (

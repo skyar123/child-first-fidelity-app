@@ -1,27 +1,18 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
-import { ArrowLeft, Menu, Download, X, FileText, Calendar, Brain, Heart, Users, Shield, Link2, Target, Compass, PenLine, Plus, Trash2, MessageSquare, Sparkles, Focus, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
-import { useForm, FormProvider, useFormContext, useFieldArray } from 'react-hook-form'
-import { AllNotesSection, GlobalFocusMode, type FocusModeSection } from '@/components/ui'
-import { GroundingExercise } from '@/components/ui/GroundingExercise'
-import { FidelityCompass } from '@/components/ui/FidelityCompass'
-import { ReflectiveJournal } from '@/components/ui/ReflectiveJournal'
-import { getProgressMessage } from '@/utils/celebrations'
+import { useState, useCallback, useEffect } from 'react'
+import { X, FileText, Brain, Heart, Users, Shield, Link2, Target, MessageSquare, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
+import { FormShellHeader } from '@/components/layout/FormShellHeader'
+import { useForm, FormProvider, useFormContext } from 'react-hook-form'
+import { AllNotesSection } from '@/components/ui'
 import {
   type CoreInterventionFormData,
   type ChallengeLevel,
   type CapacityLevel,
   type RoleBasedChallenge,
   type RoleBasedCapacity,
-  type Attendee,
   type ChildInvolvementReason,
   type ProgressLevel,
   type AttendanceStatus,
   DEFAULT_CORE_INTERVENTION_DATA,
-  CONTACT_TYPES,
-  SESSION_STATUS_OPTIONS,
-  NOT_ATTENDING_REASONS,
-  LOCATION_OPTIONS,
-  ATTENDEE_OPTIONS,
   REFLECTIVE_PRACTICE_CHALLENGES,
   CAPACITY_CONTEXTS,
   EXTERNAL_SUPPORT_ITEMS,
@@ -43,7 +34,6 @@ type SectionId =
   | 'identification'
   | 'registration'
   | 'introducing_child'
-  | 'contact_log'
   | 'reflective_practice'
   | 'emotional_process'
   | 'dyadic_relational'
@@ -64,7 +54,6 @@ const sections: Section[] = [
   { id: 'identification', label: 'Case Identification', shortLabel: 'ID', icon: FileText },
   { id: 'registration', label: 'Registration Form', shortLabel: 'Register', icon: ClipboardCheck },
   { id: 'introducing_child', label: 'Introducing Child to CPP', shortLabel: 'Intro', icon: Baby },
-  { id: 'contact_log', label: 'Contact Log', shortLabel: 'Contacts', icon: Calendar },
   { id: 'reflective_practice', label: 'Reflective Practice', shortLabel: 'Reflective', icon: Brain },
   { id: 'emotional_process', label: 'Emotional Process', shortLabel: 'Emotional', icon: Heart },
   { id: 'dyadic_relational', label: 'Dyadic-Relational', shortLabel: 'Dyadic', icon: Users },
@@ -572,197 +561,6 @@ function IntroducingChildSection() {
   )
 }
 
-// ========================================
-// Contact Log Section
-// ========================================
-function ContactLogSection() {
-  const { control, register, watch, setValue } = useFormContext<CoreInterventionFormData>()
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'contactLog'
-  })
-
-  const addEntry = () => {
-    append({
-      id: crypto.randomUUID(),
-      date: '',
-      contactType: '',
-      minutes: '',
-      sessionStatus: '',
-      notAttendingReason: '',
-      attendees: [],
-      collateralSpecify: '',
-      location: '',
-      sessionCounter: ''
-    })
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Procedural Fidelity: CPP Contact Log</h2>
-        <p className="text-gray-600">Use to track treatment participation during the core intervention phase</p>
-      </div>
-
-      <div className="glass-card rounded-xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-gray-900">Contact Entries</h3>
-          <button
-            type="button"
-            onClick={addEntry}
-            className="flex items-center gap-2 px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Entry
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {fields.map((field, index) => {
-            const entry = watch(`contactLog.${index}`)
-            const showNotAttending = entry?.sessionStatus === 'cancel' || entry?.sessionStatus === 'no_show'
-            const showCollateralSpecify = entry?.attendees?.includes('collateral')
-
-            return (
-              <div key={field.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-medium text-gray-600">Entry #{index + 1}</span>
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="p-1 text-red-500 hover:bg-red-50 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-                    <input
-                      type="date"
-                      {...register(`contactLog.${index}.date`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Contact Type</label>
-                    <select
-                      {...register(`contactLog.${index}.contactType`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                    >
-                      <option value="">Select type</option>
-                      {CONTACT_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Minutes</label>
-                    <input
-                      type="number"
-                      {...register(`contactLog.${index}.minutes`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                      placeholder="e.g., 60"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Session Status</label>
-                    <select
-                      {...register(`contactLog.${index}.sessionStatus`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                    >
-                      <option value="">Select status</option>
-                      {SESSION_STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {showNotAttending && (
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Reason Not Attending</label>
-                      <select
-                        {...register(`contactLog.${index}.notAttendingReason`)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                      >
-                        <option value="">Select reason</option>
-                        {NOT_ATTENDING_REASONS.map((reason) => (
-                          <option key={reason.value} value={reason.value}>{reason.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
-                    <select
-                      {...register(`contactLog.${index}.location`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                    >
-                      <option value="">Select location</option>
-                      {LOCATION_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Session Counter</label>
-                    <input
-                      type="text"
-                      {...register(`contactLog.${index}.sessionCounter`)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                      placeholder="e.g., 5"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Who Attended</label>
-                  <div className="flex flex-wrap gap-2">
-                    {ATTENDEE_OPTIONS.map((attendee) => {
-                      const isSelected = entry?.attendees?.includes(attendee.value)
-                      return (
-                        <button
-                          key={attendee.value}
-                          type="button"
-                          onClick={() => {
-                            const current = entry?.attendees || []
-                            const updated = isSelected
-                              ? current.filter((a: Attendee) => a !== attendee.value)
-                              : [...current, attendee.value]
-                            setValue(`contactLog.${index}.attendees`, updated)
-                          }}
-                          className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                            isSelected
-                              ? 'bg-teal-100 border-teal-300 text-teal-700'
-                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                          }`}
-                        >
-                          {attendee.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {showCollateralSpecify && (
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        {...register(`contactLog.${index}.collateralSpecify`)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500"
-                        placeholder="Specify collateral..."
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ========================================
 // Reflective Practice Section
@@ -1588,10 +1386,6 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
   const storageKey = `cf_form_core_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
-  const [showGrounding, setShowGrounding] = useState(false)
-  const [showCompass, setShowCompass] = useState(false)
-  const [showJournal, setShowJournal] = useState(false)
-  const [showFocusMode, setShowFocusMode] = useState(false)
 
   // Initialize form with default data or load from localStorage
   const methods = useForm<CoreInterventionFormData>({
@@ -1661,28 +1455,7 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
   }, [])
 
   // Build focus mode sections
-  const focusModeSections = useMemo((): FocusModeSection[] => {
-    return sections.map((section) => ({
-      id: section.id,
-      name: section.label,
-      items: [{
-        id: `${section.id}_overview`,
-        label: section.label,
-        sectionName: section.shortLabel,
-        isComplete: false,
-        content: (
-          <div className="p-4 bg-teal-50 rounded-xl border border-teal-200">
-            <h4 className="font-medium text-teal-800 mb-2">{section.label}</h4>
-            <p className="text-gray-700">Navigate to this section to complete the items.</p>
-          </div>
-        ),
-      }],
-    }))
-  }, [])
 
-  const handleFocusModeSection = useCallback((sectionId: string) => {
-    setCurrentSection(sectionId as SectionId)
-  }, [])
 
   const renderSection = () => {
     switch (currentSection) {
@@ -1692,8 +1465,6 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
         return <RegistrationSection />
       case 'introducing_child':
         return <IntroducingChildSection />
-      case 'contact_log':
-        return <ContactLogSection />
       case 'reflective_practice':
         return <ReflectivePracticeSection />
       case 'emotional_process':
@@ -1728,126 +1499,18 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
     }
   }
 
-  const progressMessage = getProgressMessage(progress)
 
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen animated-gradient-bg">
-        {/* Header */}
-        <header className="sticky top-0 z-40 glass-header border-b border-white/20">
-          <div className="flex items-center justify-between px-4 h-14">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onBack}
-                className="p-2 -ml-2 rounded-xl hover:bg-white/50 transition-colors"
-                aria-label="Back to form selection"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <button
-                onClick={() => setNavOpen(true)}
-                className="lg:hidden p-2 rounded-xl hover:bg-white/50 transition-colors"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30 float-animation">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="hidden sm:block">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-sm font-bold gradient-text truncate max-w-[200px]">
-                      {formValues.identification?.clientInitials || 'Core Intervention'}
-                    </h1>
-                    {progress === 100 && (
-                      <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-medium">
-                        Complete!
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Core Intervention Phase
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1">
-              {/* Focus Mode Button */}
-              <button
-                onClick={() => setShowFocusMode(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-600 transition-all shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50"
-                aria-label="Enter Focus Mode"
-                title="Focus Mode - Review items one at a time"
-              >
-                <Focus className="w-4 h-4" />
-                <span className="hidden sm:inline">Focus</span>
-              </button>
-              <span className="w-px h-6 bg-gray-200 mx-1" />
-              {/* Wellness Features */}
-              <button
-                onClick={() => setShowGrounding(true)}
-                className="p-2.5 rounded-xl hover:bg-cyan-50 text-cyan-500 hover:text-cyan-600 transition-all"
-                aria-label="Regulate First - Grounding Exercise"
-                title="Regulate First"
-              >
-                <Heart className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setShowCompass(true)}
-                className="p-2.5 rounded-xl hover:bg-green-50 text-green-500 hover:text-green-600 transition-all"
-                aria-label="Fidelity Compass"
-                title="Fidelity Compass"
-              >
-                <Compass className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setShowJournal(true)}
-                className="p-2.5 rounded-xl hover:bg-purple-50 text-purple-500 hover:text-purple-600 transition-all"
-                aria-label="Reflective Practice Journal"
-                title="Reflective Journal"
-              >
-                <PenLine className="w-5 h-5" />
-              </button>
-              <span className="w-px h-6 bg-gray-200 mx-1" />
-              <button
-                onClick={handleExportPDF}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 ml-2
-                         bg-gradient-to-r from-teal-500 to-cyan-500
-                         text-white text-sm font-semibold rounded-xl
-                         hover:from-teal-600 hover:to-cyan-600
-                         transition-all shadow-lg shadow-cyan-500/30
-                         hover:shadow-cyan-500/50 hover:-translate-y-0.5"
-              >
-                <Download className="w-4 h-4" />
-                Export PDF
-              </button>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="px-4 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ease-out rounded-full ${
-                    progress === 100
-                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 progress-complete'
-                      : 'bg-gradient-to-r from-teal-400 via-cyan-500 to-blue-500'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{progressMessage.emoji}</span>
-                <span className="text-sm font-semibold text-gray-700 min-w-[3ch]">
-                  {progress}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <FormShellHeader
+          title={formValues.identification?.clientInitials || 'Core Intervention'}
+          subtitle="Core Intervention form (purple form)"
+          progress={progress}
+          onBack={onBack}
+          onMenu={() => setNavOpen(true)}
+          onExportPDF={handleExportPDF}
+        />
 
         <div className="lg:flex">
           {/* Mobile overlay */}
@@ -1912,26 +1575,6 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
         </div>
       </div>
 
-      {/* Wellness Modals */}
-      {showGrounding && (
-        <GroundingExercise onClose={() => setShowGrounding(false)} />
-      )}
-      {showCompass && (
-        <FidelityCompass onClose={() => setShowCompass(false)} />
-      )}
-      {showJournal && (
-        <ReflectiveJournal onClose={() => setShowJournal(false)} />
-      )}
-
-      {/* Focus Mode */}
-      <GlobalFocusMode
-        isOpen={showFocusMode}
-        onClose={() => setShowFocusMode(false)}
-        sections={focusModeSections}
-        currentSectionId={currentSection}
-        title="Core Intervention Focus Mode"
-        onSectionChange={handleFocusModeSection}
-      />
     </FormProvider>
   )
 }
