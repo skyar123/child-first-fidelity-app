@@ -18,7 +18,7 @@ export type FormType =
   | 'program_fidelity'
   | 'core_intervention'
 
-export type FormGroup = 'post_rostering' | 'cpp_2015'
+export type FormGroup = 'site' | 'other'
 
 export interface FormTypeInfo {
   id: FormType
@@ -34,15 +34,15 @@ export interface FormTypeInfo {
 }
 
 export const FORM_GROUP_LABELS: Record<FormGroup, { title: string; description: string }> = {
-  post_rostering: {
-    title: 'Current Instruments (Post-Rostering)',
+  site: {
+    title: 'Your five fidelity forms',
     description:
-      'The instrument set in current use per the Fidelity Forms Cheat Sheet (v. 11/7/25). Roles: Clinician and Care Coordinator/Family Resource Partner (CC/FRP).',
+      'The forms used at your site, verified against your own copies: Foundational (green) → Core Intervention (purple) + Care Coordination + Supervision (pink) every 3 months → Termination (yellow) at closing.',
   },
-  cpp_2015: {
-    title: '2015 CPP-Integrated Instruments',
+  other: {
+    title: 'Other versions',
     description:
-      'The fully CPP-integrated fillable forms (pre-rostering). These can be used to fulfill trauma-informed CPP training requirements.',
+      'Post-Rostering (2018) editions and the site-level Program Fidelity Checklists. Only needed if your supervisor asks for these versions.',
   },
 }
 
@@ -57,7 +57,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'green',
     icon: '📋',
     available: true,
-    group: 'post_rostering',
+    group: 'other',
     templateId: 'pr_foundational',
   },
   {
@@ -69,20 +69,8 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'teal',
     icon: '🎯',
     available: true,
-    group: 'post_rostering',
+    group: 'other',
     templateId: 'pr_core_intervention',
-  },
-  {
-    id: 'cc_interventions',
-    name: 'Care Coordination Interventions (July 2018)',
-    shortName: 'Care Coord',
-    description:
-      'III — Completed individually by the CC/FRP after assessment and prior to formulation, then every 90 days. SNIFF, services & supports, executive functioning.',
-    color: 'cyan',
-    icon: '🤝',
-    available: true,
-    group: 'post_rostering',
-    templateId: 'cc_interventions',
   },
   {
     id: 'pr_termination',
@@ -93,7 +81,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'yellow',
     icon: '✅',
     available: true,
-    group: 'post_rostering',
+    group: 'other',
     templateId: 'pr_termination',
   },
   {
@@ -105,7 +93,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'pink',
     icon: '👥',
     available: true,
-    group: 'post_rostering',
+    group: 'other',
     templateId: 'pr_supervision',
   },
   {
@@ -117,29 +105,41 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'purple',
     icon: '📊',
     available: true,
-    group: 'post_rostering',
+    group: 'other',
     templateId: 'program_fidelity_2025',
   },
   // ---- 2015 CPP-integrated (legacy) ----
   {
     id: 'foundational',
-    name: 'Foundational Phase Fidelity (2015)',
+    name: 'Foundational packet (green form)',
     shortName: 'Foundational',
-    description: 'I — Green fillable, CPP integrated. Full assessment & engagement packet with strands, contact log, objectives.',
+    description: 'I — The first-60-days packet: engagement steps, trauma screening, strands, formulation, and contact log. Fill it in as you go.',
     color: 'green',
     icon: '📗',
     available: true,
-    group: 'cpp_2015',
+    group: 'site',
   },
   {
     id: 'core_intervention',
-    name: 'Core Intervention Phase (2015)',
+    name: 'Core Intervention form (purple form)',
     shortName: 'Core',
-    description: 'II — Purple fillable. Registration, Introducing the Child to CPP, strands, and the full CPP objectives grid.',
+    description: 'II — Every 3 months once the Foundational packet is done: introducing the child to CPP, your strand capacities, and treatment objectives.',
     color: 'teal',
     icon: '📘',
     available: true,
-    group: 'cpp_2015',
+    group: 'site',
+  },
+  {
+    id: 'cc_interventions',
+    name: 'Care Coordination form',
+    shortName: 'Care Coord',
+    description:
+      'III — The CC/FRP\'s own checklist: SNIFF, services and supports, executive functioning. First one before the formulation, then every 3 months.',
+    color: 'cyan',
+    icon: '🤝',
+    available: true,
+    group: 'site',
+    templateId: 'cc_interventions',
   },
   {
     id: 'care_coordinator',
@@ -149,27 +149,27 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'cyan',
     icon: '🤝',
     available: true,
-    group: 'cpp_2015',
+    group: 'other',
   },
   {
     id: 'termination',
-    name: 'Termination / CPP Closing (2015)',
+    name: 'Termination packet (yellow form)',
     shortName: 'Termination',
-    description: 'IV — Yellow fillable. Recapitulation and Termination Phase: closing form, planned/unplanned termination, contact log.',
+    description: 'IV — When the case closes: how it ended, the planned (or unplanned) termination steps, and final ratings.',
     color: 'yellow',
     icon: '📒',
     available: true,
-    group: 'cpp_2015',
+    group: 'site',
   },
   {
     id: 'supervision',
-    name: 'Supervision Fidelity (2015)',
+    name: 'Supervision form (pink form)',
     shortName: 'Supervision',
-    description: 'V — Pink fillable. Clinical Director/Supervisor evaluation with global ratings.',
+    description: 'V — Every 3 months, filled out on your own: rate the supervision you receive, plus your supervision log.',
     color: 'pink',
     icon: '📕',
     available: true,
-    group: 'cpp_2015',
+    group: 'site',
   },
   {
     id: 'program_fidelity',
@@ -179,7 +179,7 @@ export const FORM_TYPES: FormTypeInfo[] = [
     color: 'purple',
     icon: '📓',
     available: true,
-    group: 'cpp_2015',
+    group: 'other',
   },
 ]
 

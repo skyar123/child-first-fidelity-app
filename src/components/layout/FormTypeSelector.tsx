@@ -1,12 +1,14 @@
-import { FORM_TYPES, FORM_GROUP_LABELS, type FormType, type FormTypeInfo, type FormGroup } from '@/types/app.types'
-import { FidelityDashboard } from './FidelityDashboard'
-import { ChevronRight, Lock, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { FORM_TYPES, FORM_GROUP_LABELS, type FormType, type FormTypeInfo } from '@/types/app.types'
+import { ChevronRight, ChevronDown, Lock, Sparkles, ArrowLeft } from 'lucide-react'
 
 interface FormTypeSelectorProps {
   onSelectFormType: (formType: FormType) => void
+  onBack?: () => void
 }
 
-export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
+export function FormTypeSelector({ onSelectFormType, onBack }: FormTypeSelectorProps) {
+  const [showOther, setShowOther] = useState(false)
   const getGradientClasses = (color: string, available: boolean) => {
     if (!available) {
       return 'from-gray-100 to-gray-50 border-gray-200/50'
@@ -61,6 +63,15 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
       </div>
 
       <div className="max-w-4xl w-full relative z-10">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 mb-4 px-3 py-2 text-sm rounded-full bg-white/60 backdrop-blur border border-white/60 text-gray-700 hover:bg-white/90"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to clients
+          </button>
+        )}
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30 float-animation">
@@ -79,11 +90,8 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
           </p>
         </div>
 
-        {/* Fidelity case dashboard: cadence, 2-case rule, backup */}
-        <FidelityDashboard />
-
-        {/* Form Type Grids, grouped by instrument set */}
-        {(['post_rostering', 'cpp_2015'] as FormGroup[]).map(group => (
+        {/* Site forms first; other versions collapsed */}
+        {(showOther ? (['site', 'other'] as const) : (['site'] as const)).map(group => (
         <div key={group} className="mb-10">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-800">{FORM_GROUP_LABELS[group].title}</h2>
@@ -147,6 +155,18 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
         </div>
         </div>
         ))}
+
+        {/* Toggle for the extra versions */}
+        <div className="text-center mb-6">
+          <button
+            type="button"
+            onClick={() => setShowOther(o => !o)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-full bg-white/50 backdrop-blur border border-white/50 text-gray-600 hover:bg-white/80"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${showOther ? 'rotate-180' : ''}`} />
+            {showOther ? 'Hide other versions' : 'Other versions (Post-Rostering, Program Checklists)'}
+          </button>
+        </div>
 
         {/* Footer */}
         <div className="text-center mt-10">
