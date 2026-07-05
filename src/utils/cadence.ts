@@ -39,12 +39,13 @@ function latest(records: TemplateRecord[], templateId: string): TemplateRecord |
 export function computeCaseCadence(caseId: string, records: TemplateRecord[], now = Date.now()): CaseCadence {
   const foundational = latest(records, 'pr_foundational')
   const core = latest(records, 'pr_core_intervention')
+  const careCoordination = latest(records, 'cc_interventions')
   const supervision = latest(records, 'pr_supervision')
   const termination = latest(records, 'pr_termination')
 
   const clientInitials = records[0]?.clientInitials || caseId
 
-  const cycleDates = [core?.createdAt, supervision?.createdAt].filter(
+  const cycleDates = [core?.createdAt, careCoordination?.createdAt, supervision?.createdAt].filter(
     (d): d is number => typeof d === 'number'
   )
   const lastCycleAt = cycleDates.length > 0 ? Math.max(...cycleDates) : null

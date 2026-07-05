@@ -7,6 +7,7 @@ describe('template registry', () => {
     expect(ids).toEqual([
       'pr_foundational',
       'pr_core_intervention',
+      'cc_interventions',
       'pr_termination',
       'pr_supervision',
       'program_fidelity_2025',

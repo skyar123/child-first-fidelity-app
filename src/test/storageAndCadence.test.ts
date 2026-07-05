@@ -83,6 +83,14 @@ describe('cadence', () => {
     expect(cadence.overdue).toBe(false)
   })
 
+  it('counts care-coordination forms as 90-day cycle activity', () => {
+    const ae = createRecord('pr_foundational', 'v', 'AA')
+    const cc = createRecord('cc_interventions', 'v', 'AA')
+    const cadence = computeCaseCadence('AA', [ae, cc], cc.createdAt + DAY_MS)
+    expect(cadence.lastCycleAt).toBe(cc.createdAt)
+    expect(cadence.nextDueAt).toBe(cc.createdAt + CYCLE_DAYS * DAY_MS)
+  })
+
   it('marks overdue cycles and closes cases at termination', () => {
     const ae = createRecord('pr_foundational', 'v', 'AA')
     const past = ae.createdAt + (CYCLE_DAYS + 10) * DAY_MS

@@ -31,6 +31,7 @@ export interface TemplateItem {
   bullets?: string[] // static example/instruction bullets from the form
   options?: TemplateOption[]
   naOption?: boolean // checkbox: adds an N/A toggle
+  naLabel?: string // custom N/A label (e.g. "N/A or UTD")
   flagLabel?: string // checkbox: extra flag such as "< 2 months"
   role?: 'clinician' | 'ccFrp' // radio answered by one role only
   childFirstOnly?: boolean

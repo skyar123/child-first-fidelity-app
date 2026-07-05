@@ -6,6 +6,7 @@ export type FormType =
   // POST ROSTERING instruments (current, © Child First 2018/2025) — template-driven
   | 'pr_foundational'
   | 'pr_core_intervention'
+  | 'cc_interventions'
   | 'pr_termination'
   | 'pr_supervision'
   | 'program_fidelity_2025'
@@ -70,6 +71,18 @@ export const FORM_TYPES: FormTypeInfo[] = [
     available: true,
     group: 'post_rostering',
     templateId: 'pr_core_intervention',
+  },
+  {
+    id: 'cc_interventions',
+    name: 'Care Coordination Interventions (July 2018)',
+    shortName: 'Care Coord',
+    description:
+      'III — Completed individually by the CC/FRP after assessment and prior to formulation, then every 90 days. SNIFF, services & supports, executive functioning.',
+    color: 'cyan',
+    icon: '🤝',
+    available: true,
+    group: 'post_rostering',
+    templateId: 'cc_interventions',
   },
   {
     id: 'pr_termination',

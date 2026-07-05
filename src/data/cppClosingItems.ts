@@ -23,6 +23,11 @@ export interface ClosingReason {
 }
 
 export const CLOSING_REASONS: ClosingReason[] = [
+  // On the form, "Completed treatment" stands alone, followed by "OR" and the
+  // reasons grid below (see closingReasonsColumn1-4 in terminationSchema.ts,
+  // which the Closing Form UI renders together with a dedicated
+  // completedTreatment field).
+  { id: 'completed_treatment', text: 'Completed treatment', category: 'family_circumstances' },
   // Family Circumstances
   { id: 'reason_unknown', text: 'Reason unknown', category: 'family_circumstances' },
   { id: 'moved', text: 'Moved', category: 'family_circumstances' },
