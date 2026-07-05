@@ -285,25 +285,88 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
 // Record editor
 // ============================================================
 
+function isAnswered(v: ItemValue | undefined): boolean {
+  if (!v) return false
+  return Boolean(
+    v.checked ||
+      v.na ||
+      (v.value !== undefined && v.value !== '') ||
+      v.clinician !== undefined ||
+      v.ccFrp !== undefined
+  )
+}
+
+function sectionCount(
+  section: { items: TemplateItem[] },
+  record: TemplateRecord
+): { done: number; total: number } {
+  let done = 0
+  let total = 0
+  for (const item of section.items) {
+    if (item.type === 'note') continue
+    total++
+    if (isAnswered(record.values[item.id])) done++
+  }
+  return { done, total }
+}
+
 function answeredCount(template: FormTemplate, record: TemplateRecord): { done: number; total: number } {
   let done = 0
   let total = 0
   for (const section of template.sections) {
-    for (const item of section.items) {
-      if (item.type === 'note') continue
-      total++
-      const v = record.values[item.id]
-      if (!v) continue
-      const answered =
-        v.checked ||
-        v.na ||
-        (v.value !== undefined && v.value !== '') ||
-        v.clinician !== undefined ||
-        v.ccFrp !== undefined
-      if (answered) done++
-    }
+    const c = sectionCount(section, record)
+    done += c.done
+    total += c.total
   }
   return { done, total }
+}
+
+/** "Form at a glance": every section with its progress; tap to jump. */
+function FormSnapshot({ template, record }: { template: FormTemplate; record: TemplateRecord }) {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <h2 className="font-semibold text-gray-900 mb-1">The whole form at a glance</h2>
+      <p className="text-xs text-gray-500 mb-3">
+        Every part of this form, and how much of each is filled in. Tap a row to jump there.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-2">
+        {template.sections.map(section => {
+          const { done, total } = sectionCount(section, record)
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0
+          const complete = total > 0 && done === total
+          return (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById(`section-${section.id}`)
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+              className="flex items-center gap-2 text-left p-2 rounded-lg hover:bg-gray-50 border border-gray-100"
+            >
+              <span
+                className={`text-xs font-semibold w-10 text-right flex-shrink-0 ${
+                  complete ? 'text-emerald-600' : pct > 0 ? 'text-indigo-600' : 'text-gray-300'
+                }`}
+              >
+                {done}/{total}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-700 truncate">{section.title}</div>
+                <div className="h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                  <div
+                    className={`h-full ${complete ? 'bg-emerald-500' : 'bg-indigo-400'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function RecordEditor({
@@ -397,6 +460,9 @@ function RecordEditor({
           {template.whenCompleted}
         </div>
 
+        {/* Form at a glance */}
+        <FormSnapshot template={template} record={current} />
+
         {/* Header fields */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <h2 className="font-semibold text-gray-900 mb-3">Form Information</h2>
@@ -425,7 +491,11 @@ function RecordEditor({
 
         {/* Sections */}
         {template.sections.map(section => (
-          <div key={section.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div
+            key={section.id}
+            id={`section-${section.id}`}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden scroll-mt-20"
+          >
             <div className="p-4 bg-slate-50 border-b border-gray-200">
               <h2 className="font-semibold text-gray-900">{section.title}</h2>
               {section.description && (
@@ -507,14 +577,16 @@ const STATUS_BADGES: Record<RecordStatus, { label: string; className: string }> 
 export function TemplateFormShell({
   templateId,
   onBack,
+  defaultInitials,
 }: {
   templateId: string
   onBack: () => void
+  defaultInitials?: string
 }) {
   const template = getTemplate(templateId)
   const [records, setRecords] = useState<TemplateRecord[]>(() => listRecords(templateId))
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null)
-  const [newInitials, setNewInitials] = useState('')
+  const [newInitials, setNewInitials] = useState(defaultInitials || '')
 
   if (!template) {
     return (
