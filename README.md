@@ -11,10 +11,10 @@ official documents: a printed export should be recognizably the sanctioned form.
 
 ## What it does
 
-- **Both instrument sets**: the 2015 "CPP integrated" fillable forms and the
-  current **POST ROSTERING (2018)** forms, plus the Program Fidelity Checklist
-  (Oct 2019 and July 2025 editions). Every saved record carries the template
-  version it was completed against.
+- **One implementation per instrument** — the five forms of the Child First
+  Fidelity Framework (I Foundational green, II Core Intervention purple,
+  III Care Coordination, IV Termination yellow, V Supervision pink), verified
+  against the site's own documents. No duplicate versions in the UI.
 - **Dual marking**: Clinician answers (✓) and CC/FRP answers (✗) side by side on
   the same form, exactly like the paper workflow.
 - **Fidelity case arc**: Assessment & Engagement (≤ 60 days) → Core Intervention

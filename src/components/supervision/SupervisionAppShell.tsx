@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { ArrowLeft, Menu, Download, X, Sparkles, Heart, Compass, PenLine, Focus } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { SupervisionFormData } from '@/types/supervision.types'
@@ -53,9 +53,11 @@ const sections: Section[] = [
 
 interface SupervisionAppShellProps {
   onBack: () => void
+  clientInitials?: string
 }
 
-export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
+export function SupervisionAppShell({ onBack, clientInitials }: SupervisionAppShellProps) {
+  const storageKey = `cf_form_supervision_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
   const [showGrounding, setShowGrounding] = useState(false)
@@ -64,9 +66,25 @@ export function SupervisionAppShell({ onBack }: SupervisionAppShellProps) {
   const [showFocusMode, setShowFocusMode] = useState(false)
 
   const methods = useForm<SupervisionFormData>({
-    defaultValues: createDefaultSupervisionFormData(),
+    defaultValues: (() => {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) return { ...createDefaultSupervisionFormData(), ...JSON.parse(saved) }
+      } catch (error) {
+        console.error('Error loading saved supervision form', error)
+      }
+      return createDefaultSupervisionFormData()
+    })(),
     mode: 'onChange'
   })
+
+  // Auto-save per client
+  useEffect(() => {
+    const subscription = methods.watch(data => {
+      localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return () => subscription.unsubscribe()
+  }, [methods, storageKey])
 
   const { watch } = methods
   const formValues = watch()

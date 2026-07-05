@@ -15,22 +15,12 @@ export interface FormData {
   planOfCare: PlanOfCare
   homeVisit: HomeVisitChecklists
   cppObjectives: CPPObjectives
-  careCoordinator: CareCoordinator
-  programFidelity: ProgramFidelity
 }
 
 // ========================================
 // Program Fidelity
 // ========================================
 
-export type ProgramFidelityRating = 0 | 1 | 2 | 3 | null
-
-export interface ProgramFidelity {
-  affiliateSiteName: string
-  dateCompleted: string
-  ratings: Record<string, ProgramFidelityRating>
-  comments: Record<string, string>
-}
 
 // ========================================
 // Case Identification
@@ -219,31 +209,6 @@ export interface CPPObjectives {
   objectives: Record<string, CPPObjective>
 }
 
-// ========================================
-// Care Coordinator Interventions
-// ========================================
-
-export interface AssessmentTrackingValue {
-  inProcess: boolean
-  completed: boolean
-  entered: boolean
-}
-
-export interface CareCoordinatorItemValue {
-  done?: boolean
-  na?: boolean
-  subItems?: Record<string, boolean>
-  assessmentTracking?: Record<string, AssessmentTrackingValue>
-}
-
-export interface CareCoordinator {
-  careCoordinatorName: string
-  clinicalDirectorName: string
-  clientInitials: string
-  childFirstSite: string
-  date: string
-  items: Record<string, CareCoordinatorItemValue>
-}
 
 // ========================================
 // Case Management Types
@@ -273,8 +238,6 @@ export interface SectionProgress {
   formulationPlanning: number
   homeVisitChecklists: number
   cppObjectives: number
-  careCoordinator: number
-  programFidelity: number
 }
 
 export interface Progress {

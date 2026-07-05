@@ -17,9 +17,7 @@ import { traumaFeedbackSections } from '@/data/traumaFeedbackItems'
 import { homeVisitSections } from '@/data/homeVisitItems'
 import { cppObjectives } from '@/data/cppObjectives'
 import { formulationChecklistSections, getTotalFormulationItems } from '@/data/formulationItems'
-import { careCoordinatorSections } from '@/data/careCoordinatorItems'
-import { calculateProgramFidelityProgress } from '@/data/programFidelityItems'
-import type { FormData, Progress, SectionProgress, CareCoordinatorItemValue } from '@/types/form.types'
+import type { FormData, Progress, SectionProgress } from '@/types/form.types'
 
 // ========================================
 // Context Types
@@ -59,8 +57,6 @@ function calculateProgress(formValues: FormData): Progress {
     formulationPlanning: calculateFormulationProgress(formValues),
     homeVisitChecklists: calculateHomeVisitProgress(formValues),
     cppObjectives: calculateCppObjectivesProgress(formValues),
-    careCoordinator: calculateCareCoordinatorProgress(formValues),
-    programFidelity: calculateProgramFidelityProgress(formValues.programFidelity?.ratings || {}),
   }
 
   // Calculate overall (weighted average)
@@ -73,8 +69,6 @@ function calculateProgress(formValues: FormData): Progress {
     formulationPlanning: 10,
     homeVisitChecklists: 10,
     cppObjectives: 15,
-    careCoordinator: 15,
-    programFidelity: 15,
   }
 
   let totalWeight = 0
@@ -98,8 +92,6 @@ function calculateProgress(formValues: FormData): Progress {
       formulationPlanning: clamp(sections.formulationPlanning),
       homeVisitChecklists: clamp(sections.homeVisitChecklists),
       cppObjectives: clamp(sections.cppObjectives),
-      careCoordinator: clamp(sections.careCoordinator),
-      programFidelity: clamp(sections.programFidelity),
     },
     overall: clamp(overall),
   }
@@ -269,44 +261,6 @@ function calculateCppObjectivesProgress(formValues: FormData): number {
   return Math.round((completedObjectives / totalObjectives) * 100)
 }
 
-function calculateCareCoordinatorProgress(formValues: FormData): number {
-  const items = formValues.careCoordinator?.items || {}
-  
-  // Count total items from the actual data configuration, not from stored data
-  let totalItems = 0
-  let completedItems = 0
-  
-  for (const section of careCoordinatorSections) {
-    for (const item of section.items) {
-      if (item.type === 'checkbox') {
-        totalItems++
-        const itemData = items[item.id] as CareCoordinatorItemValue | undefined
-        if (itemData?.done || itemData?.na) {
-          completedItems++
-        }
-      } else if (item.type === 'multi-checkbox' && item.subItems) {
-        for (const subItem of item.subItems) {
-          totalItems++
-          const itemData = items[item.id] as CareCoordinatorItemValue | undefined
-          if (itemData?.subItems?.[subItem.id]) {
-            completedItems++
-          }
-        }
-      } else if (item.type === 'assessment-tracking' && item.assessmentTrackingItems) {
-        for (const trackingItem of item.assessmentTrackingItems) {
-          totalItems++
-          const itemData = items[item.id] as CareCoordinatorItemValue | undefined
-          const tracking = itemData?.assessmentTracking?.[trackingItem.id]
-          if (tracking?.completed || tracking?.entered) {
-            completedItems++
-          }
-        }
-      }
-    }
-  }
-  
-  return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
-}
 
 // ========================================
 // Provider Component
@@ -363,8 +317,6 @@ export function CPPFormProvider({
           formulationPlanning: 0,
           homeVisitChecklists: 0,
           cppObjectives: 0,
-          careCoordinator: 0,
-          programFidelity: 0,
         },
         overall: 0,
       }

@@ -25,13 +25,11 @@ const SECTION_ORDER: SectionId[] = [
   'fidelity',
   'contactLog',
   'assessment',
-  'careCoordinator',
   'feedback',
   'formulation',
   'planOfCare',
   'homeVisit',
   'cppObjectives',
-  'programFidelity',
 ]
 
 interface AppShellProps {
@@ -44,13 +42,11 @@ import {
   ContactLogSection,
   FidelityStrandsSection,
   AssessmentChecklistSection,
-  CareCoordinatorSection,
   TraumaFeedbackSection,
   FormulationSection,
   PlanOfCareSection,
   HomeVisitSection,
   CPPObjectivesSection,
-  ProgramFidelitySection,
 } from '@/components/sections'
 
 function MainContent({
@@ -67,8 +63,6 @@ function MainContent({
       return <ContactLogSection />
     case 'assessment':
       return <AssessmentChecklistSection />
-    case 'careCoordinator':
-      return <CareCoordinatorSection />
     case 'feedback':
       return <TraumaFeedbackSection />
     case 'formulation':
@@ -79,8 +73,6 @@ function MainContent({
       return <HomeVisitSection />
     case 'cppObjectives':
       return <CPPObjectivesSection />
-    case 'programFidelity':
-      return <ProgramFidelitySection />
     default:
       return null
   }

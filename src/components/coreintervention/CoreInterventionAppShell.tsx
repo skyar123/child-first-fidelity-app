@@ -79,6 +79,7 @@ const STORAGE_KEY = 'core_intervention_form'
 
 interface CoreInterventionAppShellProps {
   onBack: () => void
+  clientInitials?: string
 }
 
 // ========================================
@@ -1583,7 +1584,8 @@ function NotesSection() {
 // ========================================
 // Main Component
 // ========================================
-export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellProps) {
+export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterventionAppShellProps) {
+  const storageKey = `cf_form_core_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
   const [navOpen, setNavOpen] = useState(false)
   const [showGrounding, setShowGrounding] = useState(false)
@@ -1593,17 +1595,17 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
 
   // Initialize form with default data or load from localStorage
   const methods = useForm<CoreInterventionFormData>({
-    defaultValues: () => {
-      const saved = localStorage.getItem(STORAGE_KEY)
+    defaultValues: (() => {
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(STORAGE_KEY)
       if (saved) {
         try {
-          return JSON.parse(saved)
+          return { ...DEFAULT_CORE_INTERVENTION_DATA, ...JSON.parse(saved) }
         } catch {
           return DEFAULT_CORE_INTERVENTION_DATA
         }
       }
       return DEFAULT_CORE_INTERVENTION_DATA
-    }
+    })()
   })
 
   const formValues = methods.watch()
@@ -1611,7 +1613,7 @@ export function CoreInterventionAppShell({ onBack }: CoreInterventionAppShellPro
   // Auto-save to localStorage
   useEffect(() => {
     const subscription = methods.watch((data) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      localStorage.setItem(storageKey, JSON.stringify(data))
     })
     return () => subscription.unsubscribe()
   }, [methods])

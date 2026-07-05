@@ -4,7 +4,7 @@
 // any device. The backup contains client initials and free-text notes —
 // treat the file with the same care as the paper forms (locked storage).
 
-const LEGACY_PREFIXES = ['cpp_fidelity_']
+const LEGACY_PREFIXES = ['cpp_fidelity_', 'cf_form_', 'cf_clients', 'cf_visit_log', 'cf_client_plan', 'cf_role', 'core_intervention_form']
 const TEMPLATE_KEY = 'cf_template_records'
 export const BACKUP_FORMAT_VERSION = 1
 

@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { AppShell } from '@/components/layout'
 import { FormTypeSelector } from '@/components/layout/FormTypeSelector'
 import { SupervisionAppShell } from '@/components/supervision/SupervisionAppShell'
-import { CareCoordinatorAppShell } from '@/components/carecoordinator/CareCoordinatorAppShell'
 import { TerminationAppShell } from '@/components/termination/TerminationAppShell'
-import { ProgramFidelityAppShell } from '@/components/programfidelity/ProgramFidelityAppShell'
 import { CoreInterventionAppShell } from '@/components/coreintervention/CoreInterventionAppShell'
 import { TemplateFormShell } from '@/components/templateform/TemplateFormShell'
 import { ClientsHome } from '@/components/clients/ClientsHome'
@@ -72,15 +70,11 @@ function App() {
         case 'foundational':
           return <AppShell onBack={back} />
         case 'supervision':
-          return <SupervisionAppShell onBack={back} />
-        case 'care_coordinator':
-          return <CareCoordinatorAppShell onBack={back} />
+          return <SupervisionAppShell onBack={back} clientInitials={view.clientInitials} />
         case 'termination':
-          return <TerminationAppShell onBack={back} />
-        case 'program_fidelity':
-          return <ProgramFidelityAppShell onBack={back} />
+          return <TerminationAppShell onBack={back} clientInitials={view.clientInitials} />
         case 'core_intervention':
-          return <CoreInterventionAppShell onBack={back} />
+          return <CoreInterventionAppShell onBack={back} clientInitials={view.clientInitials} />
         default:
           setView({ name: 'clients' })
           return null
