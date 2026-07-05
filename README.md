@@ -1,50 +1,64 @@
-# React + TypeScript + Vite
+# Child First Fidelity App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A digital instrument for **Child First Clinicians and Care Coordinators / Family
+Resource Partners (CC/FRP)** to complete their fidelity forms on a phone, tablet,
+or laptop instead of printing and hand-filling paper forms.
 
-Currently, two official plugins are available:
+The app digitizes the **Child First Fidelity Framework** (adapted from
+Child-Parent Psychotherapy) — see `docs/sources/SOURCES.md` for the provenance
+of every instrument. The forms are intentionally faithful transcriptions of the
+official documents: a printed export should be recognizably the sanctioned form.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What it does
 
-## Expanding the ESLint configuration
+- **Both instrument sets**: the 2015 "CPP integrated" fillable forms and the
+  current **POST ROSTERING (2018)** forms, plus the Program Fidelity Checklist
+  (Oct 2019 and July 2025 editions). Every saved record carries the template
+  version it was completed against.
+- **Dual marking**: Clinician answers (✓) and CC/FRP answers (✗) side by side on
+  the same form, exactly like the paper workflow.
+- **Fidelity case arc**: Assessment & Engagement (≤ 60 days) → Core Intervention
+  every 90 days → Termination at discharge, with due dates and per-cycle records
+  (not one static form per case).
+- **PDF export** of completed forms and **JSON backup/restore** of all data.
+- **Offline-first PWA** — works in the field with no signal; all data stays on
+  your device in browser storage.
+- Reflective extras: CPP Fidelity Compass prompts, grounding exercise,
+  reflective journal.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Data & privacy
 
-- Configure the top-level `parserOptions` property like this:
+All data is stored locally in your browser (`localStorage`) and never leaves
+your device. Use client **initials only** — never full names — and keep
+free-text notes free of identifying details, consistent with how the paper
+forms are handled (locked-cabinet standard). Export a JSON backup regularly;
+clearing browser data erases everything.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Development
+
+```bash
+npm install
+npm run dev        # local dev server
+npm run build      # typecheck + production build
+npm run lint       # eslint
+npm test           # vitest unit tests
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Built with React 18, TypeScript, Vite, Tailwind CSS 4, react-hook-form, jsPDF.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## Repository layout
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- `src/data/` — transcribed instrument content (one file per form/section)
+- `src/templates/` — versioned template registry for the POST ROSTERING engine
+- `src/components/` — form UIs (per-module shells + shared UI kit)
+- `src/utils/` — storage, PDF export, backup
+- `docs/sources/` — official source documents + provenance register
+- `docs/FIDELITY_AUDIT_AND_RESEARCH_PLAN.md` — the audit this build follows
+
+## Attribution
+
+The fidelity instruments are © Child First and adapted from Child-Parent
+Psychotherapy (childparentpsychotherapy.com). This app is a personal
+documentation aid and is not affiliated with or endorsed by Child First.
+The forms are meant to *generate reflective conversation in supervision*,
+not to serve as a compliance checklist.

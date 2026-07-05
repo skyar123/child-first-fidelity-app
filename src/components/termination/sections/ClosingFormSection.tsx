@@ -1,4 +1,4 @@
-import { useFormContext, Controller } from 'react-hook-form'
+import { useFormContext, Controller, type FieldPath } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { FileText, User, Building2, Calendar, Hash } from 'lucide-react'
 import {
@@ -317,7 +317,7 @@ export function ClosingFormSection() {
               <label key={reason.id} className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  {...register(`closingForm.closingReasons.${reason.id}` as any)}
+                  {...register(`closingForm.closingReasons.${reason.id}` as FieldPath<TerminationFormData>)}
                   className="w-4 h-4 mt-0.5 text-yellow-600 rounded focus:ring-yellow-500"
                 />
                 <span className="text-sm text-gray-700">{reason.label}</span>
@@ -331,7 +331,7 @@ export function ClosingFormSection() {
               <label key={reason.id} className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  {...register(`closingForm.closingReasons.${reason.id}` as any)}
+                  {...register(`closingForm.closingReasons.${reason.id}` as FieldPath<TerminationFormData>)}
                   className="w-4 h-4 mt-0.5 text-yellow-600 rounded focus:ring-yellow-500"
                 />
                 <span className="text-sm text-gray-700">{reason.label}</span>
@@ -345,7 +345,7 @@ export function ClosingFormSection() {
               <label key={reason.id} className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  {...register(`closingForm.closingReasons.${reason.id}` as any)}
+                  {...register(`closingForm.closingReasons.${reason.id}` as FieldPath<TerminationFormData>)}
                   className="w-4 h-4 mt-0.5 text-yellow-600 rounded focus:ring-yellow-500"
                 />
                 <span className="text-sm text-gray-700">{reason.label}</span>
@@ -359,7 +359,7 @@ export function ClosingFormSection() {
               <label key={reason.id} className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  {...register(`closingForm.closingReasons.${reason.id}` as any)}
+                  {...register(`closingForm.closingReasons.${reason.id}` as FieldPath<TerminationFormData>)}
                   className="w-4 h-4 mt-0.5 text-yellow-600 rounded focus:ring-yellow-500"
                 />
                 <span className="text-sm text-gray-700">{reason.label}</span>

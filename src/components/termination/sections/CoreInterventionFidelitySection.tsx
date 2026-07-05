@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, type FieldPath } from 'react-hook-form'
 import { TerminationFormData } from '../../../types/termination.types';
 
 // Rating options for challenge levels
@@ -49,11 +49,12 @@ const DualRatingField: React.FC<DualRatingFieldProps> = ({
         <div>
           <label className="block text-xs text-gray-500 mb-1">Clinician</label>
           <Controller
-            name={`${fieldPath}.clinician` as any}
+            name={`${fieldPath}.clinician` as FieldPath<TerminationFormData>}
             control={control}
             render={({ field }) => (
               <select
                 {...field}
+                value={(field.value as string) ?? ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               >
                 {options.map((opt) => (
@@ -69,11 +70,12 @@ const DualRatingField: React.FC<DualRatingFieldProps> = ({
         <div>
           <label className="block text-xs text-gray-500 mb-1">Care Coordinator</label>
           <Controller
-            name={`${fieldPath}.careCoordinator` as any}
+            name={`${fieldPath}.careCoordinator` as FieldPath<TerminationFormData>}
             control={control}
             render={({ field }) => (
               <select
                 {...field}
+                value={(field.value as string) ?? ''}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               >
                 {options.map((opt) => (

@@ -8,7 +8,7 @@ interface QuestionNotesProps {
   placeholder?: string
 }
 
-export function QuestionNotes({ questionId: _questionId, value, onChange, placeholder = 'Add notes for supervision...' }: QuestionNotesProps) {
+export function QuestionNotes({ value, onChange, placeholder = 'Add notes for supervision...' }: QuestionNotesProps) {
   const [isExpanded, setIsExpanded] = useState(!!value)
 
   return (

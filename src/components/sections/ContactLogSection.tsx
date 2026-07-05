@@ -79,11 +79,8 @@ function ContactSummary() {
   const { watch } = useFormContext<FormData>()
   const contacts = watch('contactLog')
 
-  const completedSessions = contacts.filter(c => c.sessionStatus === 'completed').length
-  const cancelledSessions = contacts.filter(c =>
-    c.sessionStatus === 'cancelled_client' ||
-    c.sessionStatus === 'cancelled_provider'
-  ).length
+  const completedSessions = contacts.filter(c => c.sessionStatus === 'show').length
+  const cancelledSessions = contacts.filter(c => c.sessionStatus === 'cancel').length
   const noShows = contacts.filter(c => c.sessionStatus === 'no_show').length
   const totalMinutes = contacts.reduce((sum, c) => sum + (c.sessionDuration || 0), 0)
 
@@ -91,7 +88,7 @@ function ContactSummary() {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
       <div className="text-center">
         <div className="text-2xl font-bold text-green-600">{completedSessions}</div>
-        <div className="text-xs text-gray-500">Completed</div>
+        <div className="text-xs text-gray-500">Show</div>
       </div>
       <div className="text-center">
         <div className="text-2xl font-bold text-yellow-600">{cancelledSessions}</div>
@@ -128,10 +125,9 @@ function ContactEntry({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'show':
         return 'bg-green-100 text-green-700'
-      case 'cancelled_client':
-      case 'cancelled_provider':
+      case 'cancel':
         return 'bg-yellow-100 text-yellow-700'
       case 'no_show':
         return 'bg-red-100 text-red-700'

@@ -6,6 +6,8 @@ import type {
   UnplannedTerminationData,
   ContactLogData,
   CPPObjectiveRating,
+  CoreInterventionFidelityData,
+  CPPObjectivesData,
 } from '../types/termination.types'
 
 // Helper to create dual response defaults
@@ -258,8 +260,8 @@ export function createDefaultTerminationFormData(): TerminationFormData {
     plannedTermination: createDefaultPlannedTerminationData(),
     unplannedTermination: createDefaultUnplannedTerminationData(),
     contactLog: createDefaultContactLogData(),
-    coreInterventionFidelity: createDefaultCoreInterventionFidelityData() as any,
-    cppObjectives: createDefaultCPPObjectivesData() as any,
+    coreInterventionFidelity: createDefaultCoreInterventionFidelityData() as unknown as CoreInterventionFidelityData,
+    cppObjectives: createDefaultCPPObjectivesData() as unknown as CPPObjectivesData,
   }
 }
 

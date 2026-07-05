@@ -153,11 +153,21 @@ export function HomeVisitSection() {
                         )}
                       </div>
                     </div>
-                    <span className={`text-sm ${
-                      isChecked ? 'text-gray-600' : 'text-gray-700'
-                    }`}>
-                      {item.label}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                          {item.number}
+                        </span>
+                        <span className={`text-sm ${
+                          isChecked ? 'text-gray-600' : 'text-gray-700'
+                        }`}>
+                          {item.label}
+                        </span>
+                      </div>
+                      {item.detail && (
+                        <p className="text-xs text-gray-500 mt-1">{item.detail}</p>
+                      )}
+                    </div>
                   </label>
                 )
               })}

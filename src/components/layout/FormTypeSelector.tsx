@@ -1,4 +1,5 @@
-import { FORM_TYPES, type FormType, type FormTypeInfo } from '@/types/app.types'
+import { FORM_TYPES, FORM_GROUP_LABELS, type FormType, type FormTypeInfo, type FormGroup } from '@/types/app.types'
+import { FidelityDashboard } from './FidelityDashboard'
 import { ChevronRight, Lock, Sparkles } from 'lucide-react'
 
 interface FormTypeSelectorProps {
@@ -72,11 +73,24 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
           <p className="text-gray-600 max-w-lg mx-auto text-lg">
             Select a fidelity form to begin. Your progress is automatically saved.
           </p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-sm mt-3">
+            The fidelity forms are meant to generate a deep, reflective conversation in supervision
+            about the work with a family — not to serve only as a checklist of completed tasks.
+          </p>
         </div>
 
-        {/* Form Type Grid */}
+        {/* Fidelity case dashboard: cadence, 2-case rule, backup */}
+        <FidelityDashboard />
+
+        {/* Form Type Grids, grouped by instrument set */}
+        {(['post_rostering', 'cpp_2015'] as FormGroup[]).map(group => (
+        <div key={group} className="mb-10">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-800">{FORM_GROUP_LABELS[group].title}</h2>
+            <p className="text-sm text-gray-600 mt-1 max-w-2xl">{FORM_GROUP_LABELS[group].description}</p>
+          </div>
         <div className="grid md:grid-cols-2 gap-5">
-          {FORM_TYPES.map((formType) => (
+          {FORM_TYPES.filter(ft => ft.group === group).map((formType) => (
             <button
               key={formType.id}
               onClick={() => handleClick(formType)}
@@ -131,6 +145,8 @@ export function FormTypeSelector({ onSelectFormType }: FormTypeSelectorProps) {
             </button>
           ))}
         </div>
+        </div>
+        ))}
 
         {/* Footer */}
         <div className="text-center mt-10">

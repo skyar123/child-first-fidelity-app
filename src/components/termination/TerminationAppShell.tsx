@@ -80,7 +80,7 @@ export function TerminationAppShell({ onBack }: TerminationAppShellProps) {
     // Closing Form progress (identification + 7 questions)
     const closing = formValues.closingForm
     let closingCompleted = 0
-    let closingTotal = 12 // 5 identification + 7 questions
+    const closingTotal = 12 // 5 identification + 7 questions
     if (closing.clinicalTeamNames) closingCompleted++
     if (closing.clientInitials) closingCompleted++
     if (closing.childFirstSite) closingCompleted++

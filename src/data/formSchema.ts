@@ -52,13 +52,8 @@ export function createDefaultFormData(_caseId?: string): FormData {
       notes: '',
     },
     formulation: {
-      presentingProblems: '',
-      traumaHistory: '',
-      developmentalHistory: '',
-      familyContext: '',
-      strengths: '',
-      treatmentGoals: '',
-      interventionPlan: '',
+      items: {},
+      notes: '',
     },
     planOfCare: {
       goals: [],
@@ -156,8 +151,8 @@ export function createCPPObjective(): CPPObjective {
   return {
     clinicalFocus: null,
     appropriateness: null,
-    progress: null,
-    interventions: [],
+    progressReferral: null,
+    progressCurrent: null,
     notes: '',
   }
 }
@@ -263,55 +258,60 @@ export const EMPLOYMENT_OPTIONS = [
   { value: 'unknown', label: 'Unknown' },
 ]
 
+// Official option lists from "PROCEDURAL FIDELITY: CPP CONTACT LOG"
+// (see docs/sources/SOURCES.md)
+
 export const CONTACT_TYPE_OPTIONS = [
-  { value: 'home_visit', label: 'Home Visit' },
-  { value: 'office_visit', label: 'Office Visit' },
-  { value: 'telehealth', label: 'Telehealth' },
-  { value: 'phone_call', label: 'Phone Call' },
-  { value: 'school_visit', label: 'School Visit' },
-  { value: 'community_visit', label: 'Community Visit' },
-  { value: 'collateral_contact', label: 'Collateral Contact' },
+  { value: 'assessment', label: 'Assessment' },
+  { value: 'care_coordination', label: 'Care Coordination' },
+  { value: 'feedback', label: 'Feedback' },
+  { value: 'dyadic_treatment', label: 'Dyadic Treatment*' },
+  { value: 'individual_caregiver', label: 'Individual caregiver*' },
+  { value: 'individual_child', label: 'Individual child*' },
+  { value: 'caregiver_phone_conversation', label: 'Caregiver phone – conversation' },
+  { value: 'caregiver_phone_message', label: 'Caregiver phone – message' },
+  { value: 'collateral_meeting', label: 'Collateral – meeting' },
+  { value: 'collateral_phone', label: 'Collateral – phone' },
+  { value: 'collateral_other', label: 'Collateral – other' },
+  { value: 'team_meeting', label: 'Team meeting' },
   { value: 'other', label: 'Other' },
 ]
 
 export const SESSION_STATUS_OPTIONS = [
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled_client', label: 'Cancelled by Client' },
-  { value: 'cancelled_provider', label: 'Cancelled by Provider' },
+  { value: 'show', label: 'Show' },
+  { value: 'cancel', label: 'Cancel' },
   { value: 'no_show', label: 'No Show' },
-  { value: 'rescheduled', label: 'Rescheduled' },
 ]
 
 export const REASON_NOT_ATTENDING_OPTIONS = [
-  { value: 'illness', label: 'Illness' },
-  { value: 'transportation', label: 'Transportation Issues' },
-  { value: 'work', label: 'Work Conflict' },
+  { value: 'childcare_problem', label: 'Childcare problem' },
+  { value: 'conflicting_appointment', label: 'Conflicting appointment' },
   { value: 'forgot', label: 'Forgot' },
-  { value: 'childcare', label: 'Childcare Issues' },
+  { value: 'illness', label: 'Illness' },
+  { value: 'team_member_cancelled', label: 'Team member cancelled' },
+  { value: 'transportation', label: 'Transportation' },
   { value: 'weather', label: 'Weather' },
-  { value: 'emergency', label: 'Family Emergency' },
-  { value: 'not_interested', label: 'Not Interested' },
   { value: 'other', label: 'Other' },
-  { value: 'na', label: 'N/A - Session Completed' },
 ]
 
 export const SESSION_LOCATION_OPTIONS = [
-  { value: 'client_home', label: "Client's Home" },
-  { value: 'office', label: 'Office' },
-  { value: 'school', label: 'School' },
-  { value: 'community', label: 'Community Setting' },
-  { value: 'virtual', label: 'Virtual/Telehealth' },
+  { value: 'home', label: 'Home' },
+  { value: 'clinic', label: 'Clinic' },
+  { value: 'community', label: 'Community' },
   { value: 'other', label: 'Other' },
 ]
 
 export const WHO_ATTENDED_OPTIONS = [
-  { value: 'target_child', label: 'Target Child' },
-  { value: 'primary_caregiver', label: 'Primary Caregiver' },
-  { value: 'secondary_caregiver', label: 'Secondary Caregiver' },
-  { value: 'sibling', label: 'Sibling(s)' },
-  { value: 'other_family', label: 'Other Family Member' },
-  { value: 'care_coordinator', label: 'Care Coordinator' },
-  { value: 'other_provider', label: 'Other Provider' },
+  { value: 'target_child', label: 'Target child' },
+  { value: 'caregiver_1', label: 'Caregiver 1' },
+  { value: 'caregiver_2', label: 'Caregiver 2' },
+  { value: 'caregiver_3', label: 'Caregiver 3' },
+  { value: 'caregiver_4', label: 'Caregiver 4' },
+  { value: 'sibling_1', label: 'Sibling 1' },
+  { value: 'sibling_2', label: 'Sibling 2' },
+  { value: 'sibling_3', label: 'Sibling 3' },
+  { value: 'sibling_4', label: 'Sibling 4' },
+  { value: 'collateral', label: 'Collateral (specify in notes)' },
 ]
 
 export const REFERRAL_SOURCE_OPTIONS = [
