@@ -21,6 +21,7 @@ import {
   WHO_ATTENDED_OPTIONS,
 } from '@/data/formSchema'
 import type { FormType } from '@/types/app.types'
+import { exportVisitLogPdf } from '@/utils/pdfExportVisitLog'
 import {
   ArrowLeft,
   NotebookPen,
@@ -32,6 +33,7 @@ import {
   Trash2,
   Undo2,
   Archive,
+  FileDown,
 } from 'lucide-react'
 
 // ------------------------------------------------------------
@@ -489,7 +491,18 @@ export function ClientDetail({
                 all the "visit notes" these forms need.
               </p>
             </div>
-            <span className="text-sm font-semibold text-cyan-700">{visits.length}</span>
+            <div className="flex items-center gap-3">
+              {visits.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => exportVisitLogPdf(client, visits)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg border border-gray-300 text-gray-700 hover:border-cyan-400 hover:text-cyan-700"
+                >
+                  <FileDown className="w-3.5 h-3.5" /> PDF
+                </button>
+              )}
+              <span className="text-sm font-semibold text-cyan-700">{visits.length}</span>
+            </div>
           </div>
           {logging && (
             <div className="p-3">
