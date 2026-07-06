@@ -6,8 +6,10 @@ interface FormShellHeaderProps {
   /** 0–100 overall progress */
   progress: number
   onBack: () => void
-  /** section-nav toggle (mobile); omit for single-scroll forms */
+  /** optional overflow action (e.g. a form's cycle switcher); omit to hide */
   onMenu?: () => void
+  /** accessible label for the menu button */
+  menuLabel?: string
   /** PDF export; omit to hide the button */
   onExportPDF?: () => void
 }
@@ -23,10 +25,11 @@ export function FormShellHeader({
   progress,
   onBack,
   onMenu,
+  menuLabel = 'Menu',
   onExportPDF,
 }: FormShellHeaderProps) {
   return (
-    <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+    <div className="safe-top sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-2">
         <button
           type="button"
@@ -40,8 +43,8 @@ export function FormShellHeader({
           <button
             type="button"
             onClick={onMenu}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"
-            aria-label="Sections"
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+            aria-label={menuLabel}
           >
             <Menu className="w-5 h-5" />
           </button>

@@ -10,16 +10,8 @@ import {
 } from '@/utils/templateStorage'
 import { exportTemplateRecordPdf } from '@/utils/pdfExportTemplate'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  FileDown,
-  Check,
-  X,
-  ClipboardCheck,
-  CircleAlert,
-} from 'lucide-react'
+import { FormShellHeader } from '@/components/layout/FormShellHeader'
+import { Plus, Trash2, Check, X, ClipboardCheck, CircleAlert } from 'lucide-react'
 
 // ============================================================
 // Item renderers
@@ -297,10 +289,12 @@ function RecordEditor({
   template,
   record,
   onBack,
+  onOpenCycles,
 }: {
   template: FormTemplate
   record: TemplateRecord
   onBack: () => void
+  onOpenCycles: () => void
 }) {
   const [current, setCurrent] = useState<TemplateRecord>(record)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -354,48 +348,20 @@ function RecordEditor({
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
-            aria-label="Back to records"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-gray-900 truncate">{template.title}</h1>
-            <p className="text-xs text-gray-500 truncate">
-              {template.instrument} · {template.version} · {current.clientInitials || 'no initials'}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-bold text-indigo-600">{pct}%</div>
-            <div className="text-[10px] text-gray-400">
-              {done}/{total}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => exportTemplateRecordPdf(template, current)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg
-                     bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            <FileDown className="w-4 h-4" />
-            PDF
-          </button>
-        </div>
-        <div className="h-1 bg-gray-100">
-          <div className="h-full bg-indigo-500 transition-all" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-100 flex flex-col">
+      <FormShellHeader
+        title={template.title}
+        subtitle={`${template.instrument} · ${current.clientInitials || 'no initials'}`}
+        progress={pct}
+        onBack={onBack}
+        onMenu={onOpenCycles}
+        menuLabel="Cycles and saved forms"
+        onExportPDF={() => exportTemplateRecordPdf(template, current)}
+      />
 
       <SectionStepper sections={steps} currentId={step} onSelect={setStep} />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 space-y-6">
         {/* Step: Form info */}
         {step === '__info' && (
           <>
@@ -499,7 +465,7 @@ function RecordEditor({
             />
           </div>
         )}
-      </div>
+      </main>
 
       <SectionStepFooter sections={steps} currentId={step} onSelect={setStep} />
     </div>
@@ -516,6 +482,102 @@ const STATUS_BADGES: Record<RecordStatus, { label: string; className: string }> 
   reviewed: { label: 'Reviewed', className: 'bg-emerald-100 text-emerald-700' },
 }
 
+// A form can be completed repeatedly (e.g. every 3 months). Rather than a
+// separate landing page, cycles live in this on-demand panel so the form opens
+// straight into the editor like every other instrument.
+function CyclesPanel({
+  records,
+  activeRecordId,
+  onSelect,
+  onCreate,
+  onDelete,
+  onClose,
+}: {
+  records: TemplateRecord[]
+  activeRecordId: string | null
+  onSelect: (id: string) => void
+  onCreate: () => void
+  onDelete: (id: string) => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="safe-bottom relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+          <div>
+            <h2 className="font-semibold text-gray-900">Saved forms &amp; cycles</h2>
+            <p className="text-xs text-gray-500">
+              One record per completion cycle — start a new form each time it&apos;s due.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg text-gray-400 hover:bg-gray-100"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto divide-y divide-gray-100">
+          {records.map(record => {
+            const badge = STATUS_BADGES[record.status]
+            const isActive = record.id === activeRecordId
+            return (
+              <div
+                key={record.id}
+                className={`flex items-center gap-3 p-4 ${isActive ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+              >
+                <button type="button" onClick={() => onSelect(record.id)} className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">
+                      {record.clientInitials || 'No initials'}
+                    </span>
+                    {isActive && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">
+                        Open
+                      </span>
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Started {new Date(record.createdAt).toLocaleDateString()} · Updated{' '}
+                    {new Date(record.updatedAt).toLocaleDateString()}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(record.id)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"
+                  aria-label="Delete record"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="p-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onCreate}
+            className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm
+                     font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+          >
+            <Plus className="w-4 h-4" />
+            Start a new form
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TemplateFormShell({
   templateId,
   onBack,
@@ -526,9 +588,27 @@ export function TemplateFormShell({
   defaultInitials?: string
 }) {
   const template = getTemplate(templateId)
-  const [records, setRecords] = useState<TemplateRecord[]>(() => listRecords(templateId))
+  const caseId = defaultInitials?.trim().toUpperCase() || undefined
+  const [records, setRecords] = useState<TemplateRecord[]>(() => listRecords(templateId, caseId))
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null)
-  const [newInitials, setNewInitials] = useState(defaultInitials || '')
+  const [cyclesOpen, setCyclesOpen] = useState(false)
+
+  const refresh = () => setRecords(listRecords(templateId, caseId))
+
+  // Open straight into the most recent record, creating one if there are none,
+  // so this form behaves exactly like the other four instruments.
+  useEffect(() => {
+    if (!template || activeRecordId) return
+    const existing = listRecords(templateId, caseId)
+    if (existing.length > 0) {
+      setRecords(existing)
+      setActiveRecordId(existing[0].id)
+    } else {
+      const record = createRecord(templateId, template.version, defaultInitials || '', caseId)
+      setRecords(listRecords(templateId, caseId))
+      setActiveRecordId(record.id)
+    }
+  }, [template, templateId, caseId, defaultInitials, activeRecordId])
 
   if (!template) {
     return (
@@ -538,134 +618,64 @@ export function TemplateFormShell({
     )
   }
 
-  const refresh = () => setRecords(listRecords(templateId))
-
   const activeRecord = activeRecordId ? records.find(r => r.id === activeRecordId) : null
-  if (activeRecord) {
-    return (
-      <RecordEditor
-        template={template}
-        record={activeRecord}
-        onBack={() => {
-          setActiveRecordId(null)
-          refresh()
-        }}
-      />
-    )
-  }
 
   const handleCreate = () => {
-    const record = createRecord(template.id, template.version, newInitials)
-    setNewInitials('')
-    refresh()
+    const record = createRecord(templateId, template.version, defaultInitials || '', caseId)
+    setRecords(listRecords(templateId, caseId))
     setActiveRecordId(record.id)
+    setCyclesOpen(false)
   }
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Delete this form record? This cannot be undone.')) {
-      deleteRecord(id)
-      refresh()
+    if (!window.confirm('Delete this form record? This cannot be undone.')) return
+    deleteRecord(id)
+    const remaining = listRecords(templateId, caseId)
+    setRecords(remaining)
+    if (id === activeRecordId) {
+      if (remaining.length > 0) {
+        setActiveRecordId(remaining[0].id)
+      } else {
+        const record = createRecord(templateId, template.version, defaultInitials || '', caseId)
+        setRecords(listRecords(templateId, caseId))
+        setActiveRecordId(record.id)
+      }
     }
   }
 
+  if (!activeRecord) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-400">
+        Opening form…
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
-            aria-label="Back to form selection"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <h1 className="font-semibold text-gray-900">{template.title}</h1>
-            <p className="text-xs text-gray-500">
-              {template.instrument} · {template.version} · {template.copyright}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* New record */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="font-semibold text-gray-900 mb-2">Start a new form</h2>
-          <p className="text-xs text-gray-500 mb-3">{template.whenCompleted}</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newInitials}
-              onChange={e => setNewInitials(e.target.value)}
-              placeholder="Client initials (e.g. AB)"
-              maxLength={6}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-48
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              type="button"
-              onClick={handleCreate}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg
-                       bg-indigo-600 text-white hover:bg-indigo-700"
-            >
-              <Plus className="w-4 h-4" />
-              New form
-            </button>
-          </div>
-        </div>
-
-        {/* Existing records */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 bg-slate-50 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-900">Saved forms ({records.length})</h2>
-            <p className="text-xs text-gray-500">
-              One record per completion cycle — start a new form each time the instrument is due
-              rather than overwriting an old one.
-            </p>
-          </div>
-          {records.length === 0 ? (
-            <div className="p-6 text-sm text-gray-400 text-center">No forms yet.</div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {records.map(record => {
-                const badge = STATUS_BADGES[record.status]
-                return (
-                  <div key={record.id} className="flex items-center gap-3 p-4 hover:bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={() => setActiveRecordId(record.id)}
-                      className="flex-1 text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">
-                          {record.clientInitials || 'No initials'}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
-                          {badge.label}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        Started {new Date(record.createdAt).toLocaleDateString()} · Updated{' '}
-                        {new Date(record.updatedAt).toLocaleDateString()} · {record.templateVersion}
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(record.id)}
-                      className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      aria-label="Delete record"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <>
+      <RecordEditor
+        key={activeRecord.id}
+        template={template}
+        record={activeRecord}
+        onBack={onBack}
+        onOpenCycles={() => {
+          refresh()
+          setCyclesOpen(true)
+        }}
+      />
+      {cyclesOpen && (
+        <CyclesPanel
+          records={records}
+          activeRecordId={activeRecordId}
+          onSelect={id => {
+            setActiveRecordId(id)
+            setCyclesOpen(false)
+          }}
+          onCreate={handleCreate}
+          onDelete={handleDelete}
+          onClose={() => setCyclesOpen(false)}
+        />
+      )}
+    </>
   )
 }

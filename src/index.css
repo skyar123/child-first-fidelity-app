@@ -87,13 +87,20 @@ select:focus {
   }
 }
 
-/* PWA safe area padding */
+/* PWA safe area padding.
+   The sticky header/footer carry their own top/bottom insets (via the
+   .safe-top / .safe-bottom helpers) so their contents clear the notch,
+   Dynamic Island, and home indicator. The body only needs the side insets. */
 @supports (padding-top: env(safe-area-inset-top)) {
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
