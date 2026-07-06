@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
-import { X, FileText, Brain, Heart, Users, Shield, Link2, Target, MessageSquare, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
+import { FileText, Brain, Heart, Users, Shield, Link2, Target, MessageSquare, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
+import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import { AllNotesSection } from '@/components/ui'
 import {
@@ -1385,7 +1386,6 @@ function NotesSection() {
 export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterventionAppShellProps) {
   const storageKey = `cf_form_core_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('identification')
-  const [navOpen, setNavOpen] = useState(false)
 
   // Initialize form with default data or load from localStorage
   const methods = useForm<CoreInterventionFormData>({
@@ -1500,79 +1500,38 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
   }
 
 
+  const stepSections: StepSection[] = sections.map(sec => ({
+    id: sec.id,
+    label: sec.shortLabel,
+  }))
+
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen animated-gradient-bg">
+      <div className="min-h-screen bg-slate-100 flex flex-col">
         <FormShellHeader
           title={formValues.identification?.clientInitials || 'Core Intervention'}
           subtitle="Core Intervention form (purple form)"
           progress={progress}
           onBack={onBack}
-          onMenu={() => setNavOpen(true)}
           onExportPDF={handleExportPDF}
         />
 
-        <div className="lg:flex">
-          {/* Mobile overlay */}
-          {navOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={() => setNavOpen(false)}
-            />
-          )}
+        <SectionStepper
+          sections={stepSections}
+          currentId={currentSection}
+          onSelect={id => setCurrentSection(id as SectionId)}
+        />
 
-          {/* Navigation sidebar */}
-          <nav
-            className={`
-              fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-73px)] w-64 bg-white/80 backdrop-blur-sm border-r border-white/20
-              transform transition-transform duration-200 ease-in-out z-50 overflow-y-auto
-              ${navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            `}
-          >
-            {/* Mobile header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
-              <span className="font-semibold text-gray-900">Sections</span>
-              <button
-                onClick={() => setNavOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
+        <main className="flex-1">
+          <div className="max-w-4xl mx-auto px-4 py-6">{renderSection()}</div>
+        </main>
 
-            {/* Section list */}
-            <div className="p-2">
-              {sections.map((section) => {
-                const isActive = currentSection === section.id
-                const Icon = section.icon
+        <SectionStepFooter
+          sections={stepSections}
+          currentId={currentSection}
+          onSelect={id => setCurrentSection(id as SectionId)}
+        />
 
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => {
-                      setCurrentSection(section.id)
-                      setNavOpen(false)
-                    }}
-                    className={`
-                      w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-lg mb-1 transition-colors
-                      ${isActive ? 'bg-teal-100 text-teal-800' : 'text-gray-700 hover:bg-white/80'}
-                    `}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} />
-                    <span className="text-sm font-medium">{section.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </nav>
-
-          {/* Main content */}
-          <main className="flex-1 min-h-[calc(100vh-73px)] p-4 md:p-6">
-            <div className="max-w-4xl mx-auto">
-              {renderSection()}
-            </div>
-          </main>
-        </div>
       </div>
 
     </FormProvider>

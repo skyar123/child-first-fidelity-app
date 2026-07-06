@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { X } from 'lucide-react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
+import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
 
 // Create default values once outside component to ensure stability
 // Use JSON parse/stringify to ensure a pure plain object with no prototype chain issues
@@ -47,7 +47,6 @@ interface TerminationAppShellProps {
 export function TerminationAppShell({ onBack, clientInitials }: TerminationAppShellProps) {
   const storageKey = `cf_form_termination_${(clientInitials || 'default').trim().toUpperCase()}`
   const [currentSection, setCurrentSection] = useState<SectionId>('closing')
-  const [navOpen, setNavOpen] = useState(false)
 
   const methods = useForm<TerminationFormData>({
     defaultValues: (() => {
@@ -160,12 +159,6 @@ export function TerminationAppShell({ onBack, clientInitials }: TerminationAppSh
   }, [sectionProgress])
 
   // Get progress bar color
-  const getProgressColor = (value: number): string => {
-    if (value === 0) return 'bg-gray-200'
-    if (value < 50) return 'bg-yellow-400'
-    if (value < 100) return 'bg-blue-400'
-    return 'bg-green-500'
-  }
 
   const handleExportPDF = useCallback(() => {
     // TODO: Implement PDF export for termination form
@@ -193,134 +186,39 @@ export function TerminationAppShell({ onBack, clientInitials }: TerminationAppSh
   }
 
 
+  const stepSections: StepSection[] = sections.map(sec => ({
+    id: sec.id,
+    label: sec.shortLabel,
+    complete: sectionProgress[sec.id] === 100,
+  }))
+
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen animated-gradient-bg">
+      <div className="min-h-screen bg-slate-100 flex flex-col">
         <FormShellHeader
           title={formValues.closingForm.clientInitials || 'Termination'}
           subtitle="Termination packet (yellow form)"
           progress={progress}
           onBack={onBack}
-          onMenu={() => setNavOpen(true)}
           onExportPDF={handleExportPDF}
         />
 
-        <div className="lg:flex">
-          {/* Mobile overlay */}
-          {navOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={() => setNavOpen(false)}
-            />
-          )}
+        <SectionStepper
+          sections={stepSections}
+          currentId={currentSection}
+          onSelect={id => setCurrentSection(id as SectionId)}
+        />
 
-          {/* Navigation sidebar */}
-          <nav
-            className={`
-              fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-50
-              transform transition-transform duration-300 ease-in-out
-              lg:translate-x-0 lg:static lg:z-0
-              ${navOpen ? 'translate-x-0' : '-translate-x-full'}
-            `}
-          >
-            {/* Mobile header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
-              <h2 className="font-semibold text-gray-900">Sections</h2>
-              <button
-                onClick={() => setNavOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
+        <main className="flex-1">
+          <div className="max-w-4xl mx-auto px-4 py-6">{renderSection()}</div>
+        </main>
 
-            {/* Desktop header */}
-            <div className="hidden lg:block p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Termination Fidelity
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">Recapitulation & Termination Phase</p>
-            </div>
+        <SectionStepFooter
+          sections={stepSections}
+          currentId={currentSection}
+          onSelect={id => setCurrentSection(id as SectionId)}
+        />
 
-            {/* Section list */}
-            <div className="overflow-y-auto h-[calc(100vh-65px)] lg:h-[calc(100vh-80px)]">
-              <ul className="py-2">
-                {sections.map((section, index) => {
-                  const progressValue = sectionProgress[section.id]
-                  const isActive = currentSection === section.id
-
-                  return (
-                    <li key={section.id}>
-                      <button
-                        onClick={() => {
-                          setCurrentSection(section.id)
-                          setNavOpen(false)
-                        }}
-                        className={`
-                          w-full text-left px-4 py-3 flex items-center gap-3
-                          transition-colors duration-150
-                          ${isActive
-                            ? 'bg-yellow-50 border-r-2 border-yellow-500'
-                            : 'hover:bg-gray-50'
-                          }
-                        `}
-                      >
-                        {/* Section number */}
-                        <span
-                          className={`
-                            flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                            ${isActive
-                              ? 'bg-yellow-500 text-white'
-                              : progressValue === 100
-                                ? 'bg-green-500 text-white'
-                                : 'bg-gray-200 text-gray-600'
-                            }
-                          `}
-                        >
-                          {index + 1}
-                        </span>
-
-                        {/* Section info */}
-                        <div className="flex-1 min-w-0">
-                          <span
-                            className={`
-                              block text-sm font-medium truncate
-                              ${isActive ? 'text-yellow-700' : 'text-gray-700'}
-                            `}
-                          >
-                            {section.shortLabel}
-                          </span>
-
-                          {/* Progress bar */}
-                          <div className="mt-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-300 ${getProgressColor(progressValue)}`}
-                              style={{ width: `${progressValue}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Progress percentage */}
-                        <span className="flex-shrink-0 text-xs text-gray-500">
-                          {progressValue}%
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          </nav>
-
-          {/* Main content */}
-          <main className="flex-1 min-h-[calc(100vh-73px)] p-4 md:p-6">
-            <div className="max-w-4xl mx-auto">
-              {renderSection()}
-            </div>
-          </main>
-        </div>
-
-        {/* Wellness Modals */}
       </div>
     </FormProvider>
   )

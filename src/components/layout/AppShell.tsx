@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react'
 import { FormShellHeader } from './FormShellHeader'
-import { Navigation, type SectionId } from './Navigation'
+import { SectionStepper, SectionStepFooter, type StepSection } from './SectionStepper'
+import type { SectionId } from './Navigation'
 import { CaseSelector } from './CaseSelector'
 import { CPPFormProvider, useFormState } from '@/context/FormContext'
+import type { Progress } from '@/types/form.types'
 import { useCaseManager, useSectionNavigation } from '@/hooks'
 import { useFormContext } from 'react-hook-form'
 import type { FormData } from '@/types/form.types'
@@ -19,6 +21,33 @@ const SECTION_ORDER: SectionId[] = [
   'homeVisit',
   'cppObjectives',
 ]
+
+const SECTION_LABELS: Record<SectionId, string> = {
+  demographics: 'Client Registration',
+  fidelity: 'Fidelity Strands',
+  contactLog: 'Contact Log',
+  assessment: 'Assessment & Engagement',
+  feedback: 'Trauma Feedback Session',
+  formulation: 'Formulation & Planning',
+  planOfCare: 'Plan of Care',
+  homeVisit: 'Home Visit Checklists',
+  cppObjectives: 'CPP Case Conceptualization',
+}
+
+// Maps a step id to its progress key, then marks complete at 100%
+function sectionComplete(id: SectionId, progress: Progress): boolean {
+  const map: Partial<Record<SectionId, keyof Progress['sections']>> = {
+    demographics: 'caseIdentification',
+    fidelity: 'fidelityStrands',
+    assessment: 'assessmentChecklist',
+    feedback: 'traumaFeedback',
+    formulation: 'formulationPlanning',
+    homeVisit: 'homeVisitChecklists',
+    cppObjectives: 'cppObjectives',
+  }
+  const key = map[id]
+  return key ? progress.sections[key] === 100 : false
+}
 
 interface AppShellProps {
   onBack?: () => void
@@ -65,7 +94,6 @@ function MainContent({
 
 function AppShellContent({ onBack }: { onBack?: () => void }) {
   const [currentSection, setCurrentSection] = useState<SectionId>('demographics')
-  const [navOpen, setNavOpen] = useState(false)
   const [caseSelectorOpen, setCaseSelectorOpen] = useState(false)
 
   const {
@@ -128,29 +156,39 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
   const caseName = clientInitials || 'New Case'
 
+  const stepSections: StepSection[] = SECTION_ORDER.map(id => ({
+    id,
+    label: SECTION_LABELS[id],
+    complete: sectionComplete(id, progress),
+  }))
+
   return (
-    <div className="min-h-screen animated-gradient-bg">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       <FormShellHeader
         title={caseName}
         subtitle="Foundational packet (green form)"
         progress={progress.overall}
         onBack={onBack ?? (() => {})}
-        onMenu={() => setNavOpen(true)}
         onExportPDF={handleExportPDF}
       />
 
-      <div className="lg:flex">
-        <Navigation
-          currentSection={currentSection}
-          onSectionChange={setCurrentSection}
-          isOpen={navOpen}
-          onClose={() => setNavOpen(false)}
-        />
+      <SectionStepper
+        sections={stepSections}
+        currentId={currentSection}
+        onSelect={id => setCurrentSection(id as SectionId)}
+      />
 
-        <main className="flex-1 min-h-[calc(100vh-57px)]">
+      <main className="flex-1">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           <MainContent currentSection={currentSection} />
-        </main>
-      </div>
+        </div>
+      </main>
+
+      <SectionStepFooter
+        sections={stepSections}
+        currentId={currentSection}
+        onSelect={id => setCurrentSection(id as SectionId)}
+      />
 
       <CaseSelector
         isOpen={caseSelectorOpen}

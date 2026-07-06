@@ -9,6 +9,7 @@ import {
   setRecordStatus,
 } from '@/utils/templateStorage'
 import { exportTemplateRecordPdf } from '@/utils/pdfExportTemplate'
+import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
 import {
   ArrowLeft,
   Plus,
@@ -292,54 +293,6 @@ function answeredCount(template: FormTemplate, record: TemplateRecord): { done: 
   return { done, total }
 }
 
-/** "Form at a glance": every section with its progress; tap to jump. */
-function FormSnapshot({ template, record }: { template: FormTemplate; record: TemplateRecord }) {
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <h2 className="font-semibold text-gray-900 mb-1">The whole form at a glance</h2>
-      <p className="text-xs text-gray-500 mb-3">
-        Every part of this form, and how much of each is filled in. Tap a row to jump there.
-      </p>
-      <div className="grid sm:grid-cols-2 gap-2">
-        {template.sections.map(section => {
-          const { done, total } = sectionCount(section, record)
-          const pct = total > 0 ? Math.round((done / total) * 100) : 0
-          const complete = total > 0 && done === total
-          return (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById(`section-${section.id}`)
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-              className="flex items-center gap-2 text-left p-2 rounded-lg hover:bg-gray-50 border border-gray-100"
-            >
-              <span
-                className={`text-xs font-semibold w-10 text-right flex-shrink-0 ${
-                  complete ? 'text-emerald-600' : pct > 0 ? 'text-indigo-600' : 'text-gray-300'
-                }`}
-              >
-                {done}/{total}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-gray-700 truncate">{section.title}</div>
-                <div className="h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                  <div
-                    className={`h-full ${complete ? 'bg-emerald-500' : 'bg-indigo-400'}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 function RecordEditor({
   template,
   record,
@@ -365,6 +318,22 @@ function RecordEditor({
 
   const { done, total } = useMemo(() => answeredCount(template, current), [template, current])
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
+
+  // Linear steps: Form info → each section → Review
+  const steps: StepSection[] = useMemo(() => {
+    const headerComplete = template.headerFields.every(f => (current.header[f.id] || '').trim())
+    return [
+      { id: '__info', label: 'Form info', complete: headerComplete },
+      ...template.sections.map(section => {
+        const c = sectionCount(section, current)
+        return { id: section.id, label: section.title, complete: c.total > 0 && c.done === c.total }
+      }),
+      { id: '__review', label: 'Review', complete: current.status === 'reviewed' },
+    ]
+  }, [template, current])
+
+  const [step, setStep] = useState<string>('__info')
+  const activeSection = template.sections.find(s => s.id === step)
 
   const setHeader = (id: string, v: string) => {
     setCurrent(c => ({
@@ -424,57 +393,56 @@ function RecordEditor({
         </div>
       </div>
 
+      <SectionStepper sections={steps} currentId={step} onSelect={setStep} />
+
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* When completed */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-          <div className="font-medium mb-1">When completed ({template.copyright})</div>
-          {template.whenCompleted}
-        </div>
-
-        {/* Form at a glance */}
-        <FormSnapshot template={template} record={current} />
-
-        {/* Header fields */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="font-semibold text-gray-900 mb-3">Form Information</h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {template.headerFields.map(field => (
-              <div key={field.id}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
-                <input
-                  type={field.type}
-                  value={current.header[field.id] || ''}
-                  onChange={e => setHeader(field.id, e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+        {/* Step: Form info */}
+        {step === '__info' && (
+          <>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+              <div className="font-medium mb-1">When completed ({template.copyright})</div>
+              {template.whenCompleted}
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h2 className="font-semibold text-gray-900 mb-3">Form Information</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {template.headerFields.map(field => (
+                  <div key={field.id}>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      {field.label}
+                    </label>
+                    <input
+                      type={field.type}
+                      value={current.header[field.id] || ''}
+                      onChange={e => setHeader(field.id, e.target.value)}
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          {template.dualMarking && (
-            <p className="text-xs text-gray-500 mt-3">
-              On the paper form the Clinician marks answers with a <Check className="w-3 h-3 inline text-indigo-600" /> (1st
-              column) and the CC/FRP with an <X className="w-3 h-3 inline text-rose-600" /> (2nd column). Both rows are
-              available below for team completion.
-            </p>
-          )}
-        </div>
-
-        {/* Sections */}
-        {template.sections.map(section => (
-          <div
-            key={section.id}
-            id={`section-${section.id}`}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden scroll-mt-20"
-          >
-            <div className="p-4 bg-slate-50 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">{section.title}</h2>
-              {section.description && (
-                <p className="text-xs text-gray-500 mt-1">{section.description}</p>
+              {template.dualMarking && (
+                <p className="text-xs text-gray-500 mt-3">
+                  On the paper form the Clinician marks answers with a{' '}
+                  <Check className="w-3 h-3 inline text-indigo-600" /> and the CC/FRP with an{' '}
+                  <X className="w-3 h-3 inline text-rose-600" />. Both rows are available on each
+                  question for team completion.
+                </p>
               )}
             </div>
+          </>
+        )}
+
+        {/* Step: one section */}
+        {activeSection && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {activeSection.description && (
+              <div className="p-4 bg-slate-50 border-b border-gray-200">
+                <p className="text-xs text-gray-500">{activeSection.description}</p>
+              </div>
+            )}
             <div className="divide-y divide-gray-100">
-              {section.items.map(item => (
+              {activeSection.items.map(item => (
                 <TemplateItemView
                   key={item.id}
                   item={item}
@@ -485,51 +453,55 @@ function RecordEditor({
               ))}
             </div>
           </div>
-        ))}
+        )}
 
-        {/* Review workflow */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-indigo-600" />
-            Reflective Supervision Review
-          </h2>
-          <p className="text-xs text-gray-500">
-            Fidelity forms are reviewed with the Clinical Director/Supervisor during reflective
-            supervision — they are meant to start a reflective conversation, not to serve as a
-            compliance checklist.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                ['in_progress', 'In progress'],
-                ['ready_for_review', 'Ready for supervision'],
-                ['reviewed', 'Reviewed in supervision'],
-              ] as [RecordStatus, string][]
-            ).map(([status, label]) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setStatus(status)}
-                className={`px-3 py-1.5 text-sm rounded-lg border ${
-                  current.status === status
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+        {/* Step: Review */}
+        {step === '__review' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-indigo-600" />
+              Reflective Supervision Review
+            </h2>
+            <p className="text-xs text-gray-500">
+              Fidelity forms are reviewed with the Clinical Director/Supervisor during reflective
+              supervision — they are meant to start a reflective conversation, not to serve as a
+              compliance checklist.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ['in_progress', 'In progress'],
+                  ['ready_for_review', 'Ready for supervision'],
+                  ['reviewed', 'Reviewed in supervision'],
+                ] as [RecordStatus, string][]
+              ).map(([status, label]) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setStatus(status)}
+                  className={`px-3 py-1.5 text-sm rounded-lg border ${
+                    current.status === status
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={current.reviewNote || ''}
+              onChange={e => setCurrent(c => ({ ...c, reviewNote: e.target.value }))}
+              rows={3}
+              placeholder="Themes discussed in supervision, divergences between Clinician and CC/FRP ratings, follow-ups..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-400"
+            />
           </div>
-          <textarea
-            value={current.reviewNote || ''}
-            onChange={e => setCurrent(c => ({ ...c, reviewNote: e.target.value }))}
-            rows={3}
-            placeholder="Themes discussed in supervision, divergences between Clinician and CC/FRP ratings, follow-ups..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y
-                     focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-400"
-          />
-        </div>
+        )}
       </div>
+
+      <SectionStepFooter sections={steps} currentId={step} onSelect={setStep} />
     </div>
   )
 }
