@@ -45,6 +45,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Take over immediately so a new build never gets stuck behind an
+        // old service worker on an installed (home-screen) PWA.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
