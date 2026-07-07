@@ -1,5 +1,6 @@
 import { FORM_TYPES, type FormType, type FormTypeInfo } from '@/types/app.types'
-import { ChevronRight, Sparkles, ArrowLeft } from 'lucide-react'
+import { ChevronRight, ArrowLeft } from 'lucide-react'
+import { BrandMark } from '@/components/layout/BrandMark'
 
 interface FormTypeSelectorProps {
   onSelectFormType: (formType: FormType) => void
@@ -38,9 +39,7 @@ export function FormTypeSelector({ onSelectFormType, onBack }: FormTypeSelectorP
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 rounded-3xl mb-4 shadow-xl shadow-blue-500/30">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
+          <BrandMark size={64} className="mb-4" />
           <h1 className="text-3xl font-bold">
             <span className="gradient-text">The five</span>
             <span className="text-gray-800"> fidelity forms</span>

@@ -4,6 +4,7 @@ import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
+import { generateTerminationPDF } from '@/utils/pdfExportTermination'
 
 // Create default values once outside component to ensure stability
 // Use JSON parse/stringify to ensure a pure plain object with no prototype chain issues
@@ -161,8 +162,7 @@ export function TerminationAppShell({ onBack, clientInitials }: TerminationAppSh
   // Get progress bar color
 
   const handleExportPDF = useCallback(() => {
-    // TODO: Implement PDF export for termination form
-    console.log('Export Termination PDF', methods.getValues())
+    generateTerminationPDF(methods.getValues())
   }, [methods])
 
   // Build focus mode sections

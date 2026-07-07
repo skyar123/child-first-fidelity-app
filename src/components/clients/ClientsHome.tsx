@@ -14,13 +14,13 @@ import { downloadBackup, restoreBackup } from '@/utils/backup'
 import {
   Plus,
   ChevronRight,
-  Sparkles,
   Library,
   Download,
   Upload,
   CircleAlert,
   UserRound,
 } from 'lucide-react'
+import { BrandMark } from '@/components/layout/BrandMark'
 
 function ClientCard({ client, onOpen }: { client: Client; onOpen: () => void }) {
   const role = getRole()
@@ -119,9 +119,7 @@ export function ClientsHome({
       <div className="max-w-2xl mx-auto py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 rounded-3xl mb-4 shadow-xl shadow-blue-500/30">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
+          <BrandMark size={64} className="mb-4" />
           <h1 className="text-3xl font-bold">
             <span className="gradient-text">Child First</span>
             <span className="text-gray-800"> Fidelity</span>

@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { FileText, Brain, Heart, Users, Shield, Link2, Target, MessageSquare, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
+import { generateCorePDF } from '@/utils/pdfExportCore'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
-import { AllNotesSection } from '@/components/ui'
 import {
   type CoreInterventionFormData,
   type ChallengeLevel,
@@ -1358,6 +1358,60 @@ function CPPObjectivesSection() {
 // ========================================
 // Notes Section
 // ========================================
+// Strand notes gathered in one place for reflective supervision. Each field is
+// the same `notes` value editable inside its own strand section — surfaced here
+// so a supervisor can read (and add to) them together.
+const STRAND_NOTE_FIELDS: { field: string; label: string; icon: typeof Brain }[] = [
+  { field: 'reflectivePractice.notes', label: 'Reflective Practice', icon: Brain },
+  { field: 'emotionalProcess.notes', label: 'Emotional Process', icon: Heart },
+  { field: 'dyadicRelational.notes', label: 'Dyadic-Relational', icon: Users },
+  { field: 'traumaFramework.notes', label: 'Trauma Framework', icon: Shield },
+  { field: 'proceduralFidelity.notes', label: 'Procedural Fidelity', icon: Link2 },
+]
+
+function SupervisionNotesSection() {
+  const { register, watch } = useFormContext<CoreInterventionFormData>()
+  const filled = STRAND_NOTE_FIELDS.filter(
+    f => (watch(f.field as 'notes') || '').toString().trim()
+  ).length
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Supervision Notes</h2>
+        <p className="text-gray-600">
+          Notes from each strand, gathered for reflective supervision. Anything you write here also
+          appears in that strand's own section.
+          {filled > 0 && (
+            <span className="ml-1 font-medium text-teal-700">
+              {filled} of {STRAND_NOTE_FIELDS.length} strands have notes.
+            </span>
+          )}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {STRAND_NOTE_FIELDS.map(({ field, label, icon: Icon }) => (
+          <div key={field} className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-teal-100 text-teal-700">
+                <Icon className="w-4 h-4" />
+              </span>
+              <h4 className="font-semibold text-gray-800">{label}</h4>
+            </div>
+            <textarea
+              {...register(field as 'notes')}
+              rows={3}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y"
+              placeholder={`Reflections, divergences, or follow-ups for ${label}…`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function NotesSection() {
   const { register } = useFormContext<CoreInterventionFormData>()
 
@@ -1412,47 +1466,42 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
     return () => subscription.unsubscribe()
   }, [methods])
 
-  // Calculate progress
-  const calculateProgress = useCallback(() => {
-    let filled = 0
-    let total = 0
-
-    // Check identification fields
-    const id = formValues.identification || {}
-    total += 6
-    if (id.clinicalTeamNames) filled++
-    if (id.clientInitials) filled++
-    if (id.childFirstSite) filled++
-    if (id.monthYear) filled++
-    if (id.careLogicId) filled++
-    if (id.dateCorePhaseBegan) filled++
-
-    // Check contact log
-    const contactLog = formValues.contactLog || []
-    contactLog.forEach((entry) => {
-      total += 4
-      if (entry.date) filled++
-      if (entry.contactType) filled++
-      if (entry.sessionStatus) filled++
-      if (entry.location) filled++
-    })
-
-    // Check CPP objectives (sample)
-    Object.keys(formValues.cppObjectives || {}).forEach((key) => {
-      const obj = formValues.cppObjectives[key]
-      const itemCount = Object.keys(obj || {}).length
-      total += itemCount
-      filled += Object.values(obj || {}).filter((v) => v > 0).length
-    })
-
-    return total > 0 ? Math.round((filled / total) * 100) : 0
+  // Section-based progress. The strand ratings are optional and stored in
+  // sparse maps, so instead of a brittle field count we track which substantive
+  // sections have real content — the same "section complete" model the other
+  // forms use. Registration and the two notes sections are not gated on.
+  const sectionComplete = useMemo<Record<string, boolean>>(() => {
+    const d = formValues
+    const hasEntries = (o: Record<string, unknown> | undefined) => !!o && Object.keys(o).length > 0
+    const strandDone = (s: { challenges?: Record<string, unknown>; capacity?: Record<string, unknown> } | undefined) =>
+      hasEntries(s?.challenges) || hasEntries(s?.capacity)
+    return {
+      identification: !!(
+        d.identification?.clientInitials &&
+        d.identification?.childFirstSite &&
+        d.identification?.dateCorePhaseBegan
+      ),
+      introducing_child:
+        !!d.introducingChild?.notDone || hasEntries(d.introducingChild?.items),
+      reflective_practice: strandDone(d.reflectivePractice),
+      emotional_process: strandDone(d.emotionalProcess),
+      dyadic_relational: strandDone(d.dyadicRelational),
+      trauma_framework: strandDone(d.traumaFramework),
+      procedural_fidelity:
+        hasEntries(d.proceduralFidelity?.capacity) ||
+        hasEntries(d.proceduralFidelity?.homeVisitChecklist),
+      cpp_objectives: hasEntries(d.cppObjectives),
+    }
   }, [formValues])
 
-  const progress = calculateProgress()
+  const trackedSections = Object.keys(sectionComplete)
+  const progress = Math.round(
+    (trackedSections.filter(id => sectionComplete[id]).length / trackedSections.length) * 100
+  )
 
   const handleExportPDF = useCallback(() => {
-    alert('PDF export for Core Intervention form coming soon!')
-  }, [])
+    generateCorePDF(methods.getValues())
+  }, [methods])
 
   // Build focus mode sections
 
@@ -1478,20 +1527,7 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
       case 'cpp_objectives':
         return <CPPObjectivesSection />
       case 'all_notes':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Supervision Notes</h2>
-              <p className="text-gray-600">All notes added to questions for supervision review</p>
-            </div>
-            <AllNotesSection
-              notes={[]}
-              onNavigateToQuestion={(sectionId) => {
-                setCurrentSection(sectionId as SectionId)
-              }}
-            />
-          </div>
-        )
+        return <SupervisionNotesSection />
       case 'notes':
         return <NotesSection />
       default:
@@ -1503,6 +1539,7 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
   const stepSections: StepSection[] = sections.map(sec => ({
     id: sec.id,
     label: sec.shortLabel,
+    complete: sectionComplete[sec.id] ?? false,
   }))
 
   return (

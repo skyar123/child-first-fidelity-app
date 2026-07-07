@@ -87,6 +87,18 @@ select:focus {
   }
 }
 
+/* Native date/time inputs carry a user-agent minimum width and won't shrink
+   inside a narrow grid/flex cell on iOS Safari, so the control spills over the
+   field beside it. Let them size to their container instead. */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'] {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* PWA safe area padding.
    The sticky header/footer carry their own top/bottom insets (via the
    .safe-top / .safe-bottom helpers) so their contents clear the notch,
