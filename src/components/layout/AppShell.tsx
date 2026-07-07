@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
+import { UserRound, Layers, ClipboardCheck, Heart, Brain, Home, Target } from 'lucide-react'
 import { FormShellHeader } from './FormShellHeader'
 import { SectionStepper, SectionStepFooter, type StepSection } from './SectionStepper'
+import { SectionProgressHeader, type ProgressTone } from './SectionProgressHeader'
 import type { SectionId } from './Navigation'
 import { CaseSelector } from './CaseSelector'
 import { CPPFormProvider, useFormState } from '@/context/FormContext'
@@ -34,19 +36,31 @@ const SECTION_LABELS: Record<SectionId, string> = {
   cppObjectives: 'CPP Case Conceptualization',
 }
 
-// Maps a step id to its progress key, then marks complete at 100%
+// Each step's progress key, icon, tone, and subtitle for the section header.
+const SECTION_META: Partial<
+  Record<
+    SectionId,
+    {
+      key: keyof Progress['sections']
+      icon: typeof UserRound
+      tone: ProgressTone
+      subtitle: string
+    }
+  >
+> = {
+  demographics: { key: 'caseIdentification', icon: UserRound, tone: 'cyan', subtitle: 'Basic case information' },
+  fidelity: { key: 'fidelityStrands', icon: Layers, tone: 'emerald', subtitle: 'The fidelity strands' },
+  assessment: { key: 'assessmentChecklist', icon: ClipboardCheck, tone: 'blue', subtitle: 'Assessment & engagement steps' },
+  feedback: { key: 'traumaFeedback', icon: Heart, tone: 'pink', subtitle: 'The trauma feedback session' },
+  formulation: { key: 'formulationPlanning', icon: Brain, tone: 'violet', subtitle: 'Formulation & planning' },
+  homeVisit: { key: 'homeVisitChecklists', icon: Home, tone: 'amber', subtitle: 'Home-visit checklists' },
+  cppObjectives: { key: 'cppObjectives', icon: Target, tone: 'teal', subtitle: 'CPP case conceptualization' },
+}
+
+// Marks a step complete at 100%
 function sectionComplete(id: SectionId, progress: Progress): boolean {
-  const map: Partial<Record<SectionId, keyof Progress['sections']>> = {
-    demographics: 'caseIdentification',
-    fidelity: 'fidelityStrands',
-    assessment: 'assessmentChecklist',
-    feedback: 'traumaFeedback',
-    formulation: 'formulationPlanning',
-    homeVisit: 'homeVisitChecklists',
-    cppObjectives: 'cppObjectives',
-  }
-  const key = map[id]
-  return key ? progress.sections[key] === 100 : false
+  const meta = SECTION_META[id]
+  return meta ? progress.sections[meta.key] === 100 : false
 }
 
 interface AppShellProps {
@@ -180,6 +194,19 @@ function AppShellContent({ onBack }: { onBack?: () => void }) {
 
       <main className="flex-1">
         <div className="max-w-4xl mx-auto px-4 py-6">
+          {(() => {
+            const meta = SECTION_META[currentSection]
+            if (!meta) return null
+            return (
+              <SectionProgressHeader
+                icon={meta.icon}
+                title={SECTION_LABELS[currentSection]}
+                subtitle={meta.subtitle}
+                percent={progress.sections[meta.key]}
+                tone={meta.tone}
+              />
+            )
+          })()}
           <MainContent currentSection={currentSection} />
         </div>
       </main>

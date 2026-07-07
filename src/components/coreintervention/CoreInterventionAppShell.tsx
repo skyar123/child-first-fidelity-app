@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import { FileText, Brain, Heart, Users, Shield, Link2, Target, MessageSquare, ClipboardCheck, Baby, CheckCircle2 } from 'lucide-react'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
+import { SectionProgressHeader, type ProgressTone } from '@/components/layout/SectionProgressHeader'
 import { generateCorePDF } from '@/utils/pdfExportCore'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import {
@@ -64,6 +65,30 @@ const sections: Section[] = [
   { id: 'all_notes', label: 'Supervision Notes', shortLabel: 'S-Notes', icon: MessageSquare },
   { id: 'notes', label: 'Notes', shortLabel: 'Notes', icon: FileText }
 ]
+
+const SECTION_TONES: Partial<Record<SectionId, ProgressTone>> = {
+  identification: 'blue',
+  registration: 'teal',
+  introducing_child: 'cyan',
+  reflective_practice: 'violet',
+  emotional_process: 'pink',
+  dyadic_relational: 'indigo',
+  trauma_framework: 'rose',
+  procedural_fidelity: 'amber',
+  cpp_objectives: 'emerald',
+}
+
+const SECTION_SUBTITLES: Partial<Record<SectionId, string>> = {
+  identification: 'Case and clinician details',
+  registration: 'Child’s involvement in treatment',
+  introducing_child: 'Introducing the child to CPP',
+  reflective_practice: 'Clinician / CC-FRP reflective capacity',
+  emotional_process: 'Working with emotion in session',
+  dyadic_relational: 'Strengthening the caregiver–child relationship',
+  trauma_framework: 'Keeping trauma in view',
+  procedural_fidelity: 'Attendance and home-visit practices',
+  cpp_objectives: 'Treatment objectives and clinical focus',
+}
 
 const STORAGE_KEY = 'core_intervention_form'
 
@@ -1466,38 +1491,81 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
     return () => subscription.unsubscribe()
   }, [methods])
 
-  // Section-based progress. The strand ratings are optional and stored in
-  // sparse maps, so instead of a brittle field count we track which substantive
-  // sections have real content — the same "section complete" model the other
-  // forms use. Registration and the two notes sections are not gated on.
-  const sectionComplete = useMemo<Record<string, boolean>>(() => {
+  // Granular per-section progress: count how many items in each section have
+  // been answered (any Clinician or CC/FRP mark), against a fixed total from the
+  // instrument. Moves with every answer, and each section reports its own
+  // percent for the progress header — matching the Supervision form.
+  const sectionStats = useMemo<Record<string, { done: number; total: number }>>(() => {
     const d = formValues
-    const hasEntries = (o: Record<string, unknown> | undefined) => !!o && Object.keys(o).length > 0
-    const strandDone = (s: { challenges?: Record<string, unknown>; capacity?: Record<string, unknown> } | undefined) =>
-      hasEntries(s?.challenges) || hasEntries(s?.capacity)
+    const answered = (v: unknown): boolean => {
+      if (v === null || v === undefined || v === '') return false
+      if (typeof v === 'boolean') return v
+      if (typeof v === 'number') return true
+      if (typeof v === 'string') return v.trim() !== ''
+      if (typeof v === 'object') {
+        const o = v as Record<string, unknown>
+        if ('clinician' in o || 'ccFrp' in o) return answered(o.clinician) || answered(o.ccFrp)
+        return Object.values(o).some(answered)
+      }
+      return false
+    }
+    const countItems = (map: unknown): number =>
+      map && typeof map === 'object'
+        ? Object.values(map as Record<string, unknown>).filter(answered).length
+        : 0
+    const idFields = d.identification || {}
+    const idDone = ['clinicalTeamNames', 'clientInitials', 'childFirstSite', 'monthYear', 'careLogicId', 'dateCorePhaseBegan'].filter(
+      k => (idFields as Record<string, string>)[k]
+    ).length
+    const rp = d.reflectivePractice || {}
+    const pf = d.proceduralFidelity || {}
     return {
-      identification: !!(
-        d.identification?.clientInitials &&
-        d.identification?.childFirstSite &&
-        d.identification?.dateCorePhaseBegan
-      ),
-      introducing_child:
-        !!d.introducingChild?.notDone || hasEntries(d.introducingChild?.items),
-      reflective_practice: strandDone(d.reflectivePractice),
-      emotional_process: strandDone(d.emotionalProcess),
-      dyadic_relational: strandDone(d.dyadicRelational),
-      trauma_framework: strandDone(d.traumaFramework),
-      procedural_fidelity:
-        hasEntries(d.proceduralFidelity?.capacity) ||
-        hasEntries(d.proceduralFidelity?.homeVisitChecklist),
-      cpp_objectives: hasEntries(d.cppObjectives),
+      identification: { done: idDone, total: 6 },
+      registration: {
+        done: d.registration?.childInvolved === false ? (d.registration?.notInvolvedReasons?.length ? 1 : 0) : 1,
+        total: 1,
+      },
+      introducing_child: {
+        done: d.introducingChild?.notDone ? 11 : countItems(d.introducingChild?.items),
+        total: 11,
+      },
+      reflective_practice: {
+        done:
+          countItems(rp.challenges) +
+          countItems(rp.capacity) +
+          countItems((rp as { capacitySimple?: unknown }).capacitySimple) +
+          countItems((rp as { externalSupports?: unknown }).externalSupports),
+        total: 15,
+      },
+      emotional_process: {
+        done: countItems(d.emotionalProcess?.challenges) + countItems(d.emotionalProcess?.capacity),
+        total: 12,
+      },
+      dyadic_relational: {
+        done: countItems(d.dyadicRelational?.challenges) + countItems(d.dyadicRelational?.capacity),
+        total: 10,
+      },
+      trauma_framework: {
+        done: countItems(d.traumaFramework?.challenges) + countItems(d.traumaFramework?.capacity),
+        total: 9,
+      },
+      procedural_fidelity: {
+        done:
+          countItems(pf.challenges) +
+          countItems(pf.capacity) +
+          countItems((pf as { homeVisitChecklist?: unknown }).homeVisitChecklist),
+        total: 19,
+      },
+      cpp_objectives: { done: countItems(d.cppObjectives), total: 23 },
     }
   }, [formValues])
 
-  const trackedSections = Object.keys(sectionComplete)
-  const progress = Math.round(
-    (trackedSections.filter(id => sectionComplete[id]).length / trackedSections.length) * 100
-  )
+  const progress = useMemo(() => {
+    const all = Object.values(sectionStats)
+    const done = all.reduce((s, x) => s + Math.min(x.done, x.total), 0)
+    const total = all.reduce((s, x) => s + x.total, 0)
+    return total > 0 ? Math.round((done / total) * 100) : 0
+  }, [sectionStats])
 
   const handleExportPDF = useCallback(() => {
     generateCorePDF(methods.getValues())
@@ -1536,11 +1604,17 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
   }
 
 
-  const stepSections: StepSection[] = sections.map(sec => ({
-    id: sec.id,
-    label: sec.shortLabel,
-    complete: sectionComplete[sec.id] ?? false,
-  }))
+  const stepSections: StepSection[] = sections.map(sec => {
+    const st = sectionStats[sec.id]
+    return {
+      id: sec.id,
+      label: sec.shortLabel,
+      complete: st ? st.done >= st.total && st.total > 0 : false,
+    }
+  })
+
+  const activeSection = sections.find(s => s.id === currentSection)
+  const activeStats = sectionStats[currentSection]
 
   return (
     <FormProvider {...methods}>
@@ -1560,7 +1634,19 @@ export function CoreInterventionAppShell({ onBack, clientInitials }: CoreInterve
         />
 
         <main className="flex-1">
-          <div className="max-w-4xl mx-auto px-4 py-6">{renderSection()}</div>
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            {activeSection && activeStats && (
+              <SectionProgressHeader
+                icon={activeSection.icon}
+                title={activeSection.label}
+                subtitle={SECTION_SUBTITLES[currentSection]}
+                done={activeStats.done}
+                total={activeStats.total}
+                tone={SECTION_TONES[currentSection]}
+              />
+            )}
+            {renderSection()}
+          </div>
         </main>
 
         <SectionStepFooter

@@ -2,8 +2,10 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import type { TerminationFormData } from '@/types/termination.types'
 import { createDefaultTerminationFormData } from '@/data/terminationSchema'
+import { DoorOpen, CalendarCheck, CircleSlash, Layers, Target } from 'lucide-react'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
+import { SectionProgressHeader, type ProgressTone } from '@/components/layout/SectionProgressHeader'
 import { generateTerminationPDF } from '@/utils/pdfExportTermination'
 
 // Create default values once outside component to ensure stability
@@ -39,6 +41,17 @@ const sections: Section[] = [
   { id: 'coreIntervention', label: 'CPP Core Intervention Fidelity', shortLabel: 'Intervention Fidelity' },
   { id: 'cppObjectives', label: 'CPP Case Conceptualization', shortLabel: 'CPP Objectives' },
 ]
+
+const SECTION_META: Record<
+  SectionId,
+  { icon: typeof DoorOpen; tone: ProgressTone; subtitle: string }
+> = {
+  closing: { icon: DoorOpen, tone: 'amber', subtitle: 'How the case is closing' },
+  planned: { icon: CalendarCheck, tone: 'emerald', subtitle: 'Steps for a planned goodbye' },
+  unplanned: { icon: CircleSlash, tone: 'rose', subtitle: 'Steps when a family drops out' },
+  coreIntervention: { icon: Layers, tone: 'violet', subtitle: 'Final intervention fidelity ratings' },
+  cppObjectives: { icon: Target, tone: 'teal', subtitle: 'Objectives and clinical focus' },
+}
 
 interface TerminationAppShellProps {
   onBack: () => void
@@ -210,7 +223,16 @@ export function TerminationAppShell({ onBack, clientInitials }: TerminationAppSh
         />
 
         <main className="flex-1">
-          <div className="max-w-4xl mx-auto px-4 py-6">{renderSection()}</div>
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <SectionProgressHeader
+              icon={SECTION_META[currentSection].icon}
+              title={sections.find(s => s.id === currentSection)?.label || ''}
+              subtitle={SECTION_META[currentSection].subtitle}
+              percent={sectionProgress[currentSection]}
+              tone={SECTION_META[currentSection].tone}
+            />
+            {renderSection()}
+          </div>
         </main>
 
         <SectionStepFooter
