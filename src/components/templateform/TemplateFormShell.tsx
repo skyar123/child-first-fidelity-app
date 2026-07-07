@@ -9,9 +9,39 @@ import {
   setRecordStatus,
 } from '@/utils/templateStorage'
 import { exportTemplateRecordPdf } from '@/utils/pdfExportTemplate'
+import { getRole, type PractitionerRole } from '@/utils/clients'
 import { SectionStepper, SectionStepFooter, type StepSection } from '@/components/layout/SectionStepper'
 import { FormShellHeader } from '@/components/layout/FormShellHeader'
-import { Plus, Trash2, Check, X, ClipboardCheck, CircleAlert } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Check,
+  X,
+  ClipboardCheck,
+  CircleAlert,
+  ClipboardList,
+  Users,
+  Home,
+  HeartHandshake,
+  Target,
+  FileText,
+  ListChecks,
+  Brain,
+  type LucideIcon,
+} from 'lucide-react'
+
+// Rotating accent + icon per section so template forms read with the same
+// colour and structure as the bespoke forms rather than a wall of black text.
+const SECTION_ACCENTS: { badge: string; tint: string; ring: string; icon: LucideIcon }[] = [
+  { badge: 'bg-emerald-500', tint: 'from-emerald-50', ring: 'ring-emerald-100', icon: ClipboardList },
+  { badge: 'bg-cyan-500', tint: 'from-cyan-50', ring: 'ring-cyan-100', icon: Users },
+  { badge: 'bg-violet-500', tint: 'from-violet-50', ring: 'ring-violet-100', icon: Brain },
+  { badge: 'bg-pink-500', tint: 'from-pink-50', ring: 'ring-pink-100', icon: HeartHandshake },
+  { badge: 'bg-amber-500', tint: 'from-amber-50', ring: 'ring-amber-100', icon: Home },
+  { badge: 'bg-blue-500', tint: 'from-blue-50', ring: 'ring-blue-100', icon: Target },
+  { badge: 'bg-teal-500', tint: 'from-teal-50', ring: 'ring-teal-100', icon: ListChecks },
+  { badge: 'bg-fuchsia-500', tint: 'from-fuchsia-50', ring: 'ring-fuchsia-100', icon: FileText },
+]
 
 // ============================================================
 // Item renderers
@@ -22,6 +52,32 @@ interface ItemProps {
   value: ItemValue
   onChange: (next: ItemValue) => void
   dualMarking: boolean
+  userRole: PractitionerRole
+}
+
+const ROLE_LABEL: Record<PractitionerRole, string> = {
+  clinician: 'Clinician',
+  ccfrp: 'Care Coordinator / FRP',
+}
+
+// Template items use 'ccFrp'; the stored role uses 'ccfrp'.
+const roleMatches = (itemRole: 'clinician' | 'ccFrp', userRole: PractitionerRole) =>
+  (itemRole === 'clinician' && userRole === 'clinician') ||
+  (itemRole === 'ccFrp' && userRole === 'ccfrp')
+
+// Small badge marking whether a role-specific item is the current user's to fill.
+function RoleTag({ itemRole, userRole }: { itemRole: 'clinician' | 'ccFrp'; userRole: PractitionerRole }) {
+  const mine = roleMatches(itemRole, userRole)
+  const who = itemRole === 'clinician' ? 'Clinician' : 'Care Coordinator / FRP'
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+        mine ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+      }`}
+    >
+      {mine ? 'Your item' : `${who} only`}
+    </span>
+  )
 }
 
 const ACCENT_CLASSES = {
@@ -95,7 +151,7 @@ function ItemShell({ item, children }: { item: TemplateItem; children?: React.Re
   )
 }
 
-function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
+function TemplateItemView({ item, value, onChange, dualMarking, userRole }: ItemProps) {
   switch (item.type) {
     case 'note':
       return (
@@ -173,8 +229,8 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
       return (
         <ItemShell item={item}>
           {item.role && (
-            <div className="text-xs text-gray-400 mb-1">
-              {item.role === 'clinician' ? 'Clinician only' : 'CC/FRP only'}
+            <div className="mb-1.5">
+              <RoleTag itemRole={item.role} userRole={userRole} />
             </div>
           )}
           <OptionButtons
@@ -185,13 +241,15 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
         </ItemShell>
       )
 
-    case 'role_select':
+    case 'role_select': {
+      const clinicianIsYou = userRole === 'clinician'
+      const ccFrpIsYou = userRole === 'ccfrp'
       return (
         <ItemShell item={item}>
           <div className="space-y-2">
-            <div className="flex items-start gap-2">
+            <div className={`flex items-start gap-2 rounded-lg p-1.5 -m-1.5 ${clinicianIsYou ? 'bg-indigo-50/70' : ''}`}>
               <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 w-24 flex-shrink-0 mt-1">
-                <Check className="w-3.5 h-3.5" /> Clinician
+                <Check className="w-3.5 h-3.5" /> Clinician{clinicianIsYou && <span className="text-[9px] uppercase tracking-wide">· You</span>}
               </span>
               <OptionButtons
                 options={item.options || []}
@@ -201,9 +259,9 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
               />
             </div>
             {dualMarking && (
-              <div className="flex items-start gap-2">
+              <div className={`flex items-start gap-2 rounded-lg p-1.5 -m-1.5 ${ccFrpIsYou ? 'bg-rose-50/70' : ''}`}>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 w-24 flex-shrink-0 mt-1">
-                  <X className="w-3.5 h-3.5" /> CC / FRP
+                  <X className="w-3.5 h-3.5" /> CC / FRP{ccFrpIsYou && <span className="text-[9px] uppercase tracking-wide">· You</span>}
                 </span>
                 <OptionButtons
                   options={item.options || []}
@@ -216,6 +274,7 @@ function TemplateItemView({ item, value, onChange, dualMarking }: ItemProps) {
           </div>
         </ItemShell>
       )
+    }
 
     case 'scored_comment':
       return (
@@ -297,6 +356,7 @@ function RecordEditor({
   onOpenCycles: () => void
 }) {
   const [current, setCurrent] = useState<TemplateRecord>(record)
+  const userRole = getRole()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounced autosave
@@ -365,6 +425,24 @@ function RecordEditor({
         {/* Step: Form info */}
         {step === '__info' && (
           <>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex-shrink-0">
+                <Users className="w-5 h-5" />
+              </span>
+              <div className="text-sm text-gray-700">
+                You're completing this as <span className="font-semibold">{ROLE_LABEL[userRole]}</span>.
+                {template.dualMarking ? (
+                  <>
+                    {' '}
+                    Items tagged <span className="font-medium text-indigo-700">Your item</span> are yours;
+                    dual-marked questions show a highlighted <span className="font-medium">· You</span> row.
+                    You can change your role on the home screen.
+                  </>
+                ) : (
+                  <> You can change your role on the home screen.</>
+                )}
+              </div>
+            </div>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
               <div className="font-medium mb-1">When completed ({template.copyright})</div>
               {template.whenCompleted}
@@ -400,26 +478,49 @@ function RecordEditor({
         )}
 
         {/* Step: one section */}
-        {activeSection && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {activeSection.description && (
-              <div className="p-4 bg-slate-50 border-b border-gray-200">
-                <p className="text-xs text-gray-500">{activeSection.description}</p>
+        {activeSection &&
+          (() => {
+            const idx = template.sections.findIndex(s => s.id === activeSection.id)
+            const accent = SECTION_ACCENTS[idx % SECTION_ACCENTS.length]
+            const AccentIcon = accent.icon
+            const answered = sectionCount(activeSection, current)
+            return (
+              <div className={`bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden ring-1 ${accent.ring}`}>
+                <div className={`p-4 bg-gradient-to-r ${accent.tint} to-white border-b border-gray-100`}>
+                  <div className="flex items-start gap-3">
+                    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-xl text-white flex-shrink-0 ${accent.badge}`}>
+                      <AccentIcon className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-2">
+                        <h2 className="font-semibold text-gray-900 flex-1">{activeSection.title}</h2>
+                        {answered.total > 0 && (
+                          <span className="text-[11px] font-medium text-gray-400 flex-shrink-0 mt-1">
+                            {answered.done}/{answered.total}
+                          </span>
+                        )}
+                      </div>
+                      {activeSection.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{activeSection.description}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {activeSection.items.map(item => (
+                    <TemplateItemView
+                      key={item.id}
+                      item={item}
+                      value={current.values[item.id] || {}}
+                      onChange={v => setItemValue(item.id, v)}
+                      dualMarking={template.dualMarking}
+                      userRole={userRole}
+                    />
+                  ))}
+                </div>
               </div>
-            )}
-            <div className="divide-y divide-gray-100">
-              {activeSection.items.map(item => (
-                <TemplateItemView
-                  key={item.id}
-                  item={item}
-                  value={current.values[item.id] || {}}
-                  onChange={v => setItemValue(item.id, v)}
-                  dualMarking={template.dualMarking}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+            )
+          })()}
 
         {/* Step: Review */}
         {step === '__review' && (
