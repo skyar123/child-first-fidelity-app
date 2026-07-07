@@ -7,6 +7,7 @@ import { CoreInterventionAppShell } from '@/components/coreintervention/CoreInte
 import { TemplateFormShell } from '@/components/templateform/TemplateFormShell'
 import { ClientsHome } from '@/components/clients/ClientsHome'
 import { ClientDetail } from '@/components/clients/ClientDetail'
+import { AssistantChat } from '@/components/ai/AssistantChat'
 import { getFormTypeInfo, type FormType } from '@/types/app.types'
 
 type View =
@@ -21,7 +22,8 @@ function App() {
   const openForm = (formType: FormType, clientInitials?: string, fromClientId?: string) =>
     setView({ name: 'form', formType, clientInitials, fromClientId })
 
-  switch (view.name) {
+  const renderView = () => {
+    switch (view.name) {
     case 'clients':
       return (
         <ClientsHome
@@ -80,7 +82,15 @@ function App() {
           return null
       }
     }
+    }
   }
+
+  return (
+    <>
+      {renderView()}
+      <AssistantChat />
+    </>
+  )
 }
 
 export default App
