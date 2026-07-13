@@ -102,8 +102,8 @@ export function KnowledgeAreasSection() {
   const knowledge = watch('knowledgeAreas')
 
   // Calculate completion
-  const generalCompleted = Object.values(knowledge?.generalItems || {}).filter(v => v !== null).length
-  const ccCompleted = Object.values(knowledge?.careCoordinatorOnlyItems || {}).filter(v => v !== null).length
+  const generalCompleted = Object.values(knowledge?.generalItems || {}).filter(v => v != null).length
+  const ccCompleted = Object.values(knowledge?.careCoordinatorOnlyItems || {}).filter(v => v != null).length
 
   const totalItems = knowledgeAreasGeneralItems.length + knowledgeAreasCareCoordItems.length
   const completedItems = generalCompleted + ccCompleted
