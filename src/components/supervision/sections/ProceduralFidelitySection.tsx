@@ -8,7 +8,7 @@ export function ProceduralFidelitySection() {
   const items = watch('proceduralFidelity.items')
 
   // Calculate completion
-  const completedCount = Object.values(items || {}).filter(v => v !== null).length
+  const completedCount = Object.values(items || {}).filter(v => v != null).length
   const totalCount = proceduralFidelityItems.length
 
   return (

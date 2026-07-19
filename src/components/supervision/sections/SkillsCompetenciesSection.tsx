@@ -108,9 +108,9 @@ export function SkillsCompetenciesSection() {
   const skills = watch('skillsCompetencies')
 
   // Calculate completion
-  const generalCompleted = Object.values(skills?.generalItems || {}).filter(v => v !== null).length
-  const clinicianCompleted = Object.values(skills?.clinicianOnlyItems || {}).filter(v => v !== null).length
-  const ccCompleted = Object.values(skills?.careCoordinatorOnlyItems || {}).filter(v => v !== null).length
+  const generalCompleted = Object.values(skills?.generalItems || {}).filter(v => v != null).length
+  const clinicianCompleted = Object.values(skills?.clinicianOnlyItems || {}).filter(v => v != null).length
+  const ccCompleted = Object.values(skills?.careCoordinatorOnlyItems || {}).filter(v => v != null).length
 
   const totalItems = skillsCompetenciesGeneralItems.length +
     skillsCompetenciesClinicianItems.length +

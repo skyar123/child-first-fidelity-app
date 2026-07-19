@@ -119,9 +119,9 @@ export function SupervisorCapacitySection() {
   const capacity = watch('supervisorCapacity')
 
   // Calculate completion
-  const generalCompleted = Object.values(capacity?.generalItems || {}).filter(v => v !== null).length
-  const clinicianCompleted = Object.values(capacity?.clinicianOnlyItems || {}).filter(v => v !== null).length
-  const ccCompleted = Object.values(capacity?.careCoordinatorOnlyItems || {}).filter(v => v !== null).length
+  const generalCompleted = Object.values(capacity?.generalItems || {}).filter(v => v != null).length
+  const clinicianCompleted = Object.values(capacity?.clinicianOnlyItems || {}).filter(v => v != null).length
+  const ccCompleted = Object.values(capacity?.careCoordinatorOnlyItems || {}).filter(v => v != null).length
 
   const totalItems = supervisorCapacityGeneralItems.length +
     supervisorCapacityClinicianItems.length +

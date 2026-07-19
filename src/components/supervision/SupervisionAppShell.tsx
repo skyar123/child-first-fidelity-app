@@ -93,31 +93,31 @@ export function SupervisionAppShell({ onBack, clientInitials }: SupervisionAppSh
     progress.identification = Math.round((idCompleted / 3) * 100)
 
     // Procedural items
-    const proceduralCompleted = Object.values(formValues.proceduralFidelity.items).filter(v => v !== null).length
+    const proceduralCompleted = Object.values(formValues.proceduralFidelity.items).filter(v => v != null).length
     progress.procedural = Math.round((proceduralCompleted / 7) * 100)
 
     // Capacity items
     const capacityCompleted =
-      Object.values(formValues.supervisorCapacity.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.supervisorCapacity.clinicianOnlyItems).filter(v => v !== null).length +
-      Object.values(formValues.supervisorCapacity.careCoordinatorOnlyItems).filter(v => v !== null).length
+      Object.values(formValues.supervisorCapacity.generalItems).filter(v => v != null).length +
+      Object.values(formValues.supervisorCapacity.clinicianOnlyItems).filter(v => v != null).length +
+      Object.values(formValues.supervisorCapacity.careCoordinatorOnlyItems).filter(v => v != null).length
     progress.capacity = Math.round((capacityCompleted / 18) * 100)
 
     // Knowledge items
     const knowledgeCompleted =
-      Object.values(formValues.knowledgeAreas.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.knowledgeAreas.careCoordinatorOnlyItems).filter(v => v !== null).length
+      Object.values(formValues.knowledgeAreas.generalItems).filter(v => v != null).length +
+      Object.values(formValues.knowledgeAreas.careCoordinatorOnlyItems).filter(v => v != null).length
     progress.knowledge = Math.round((knowledgeCompleted / 9) * 100)
 
     // Skills items
     const skillsCompleted =
-      Object.values(formValues.skillsCompetencies.generalItems).filter(v => v !== null).length +
-      Object.values(formValues.skillsCompetencies.clinicianOnlyItems).filter(v => v !== null).length +
-      Object.values(formValues.skillsCompetencies.careCoordinatorOnlyItems).filter(v => v !== null).length
+      Object.values(formValues.skillsCompetencies.generalItems).filter(v => v != null).length +
+      Object.values(formValues.skillsCompetencies.clinicianOnlyItems).filter(v => v != null).length +
+      Object.values(formValues.skillsCompetencies.careCoordinatorOnlyItems).filter(v => v != null).length
     progress.skills = Math.round((skillsCompleted / 15) * 100)
 
     // Global ratings
-    const globalCompleted = Object.values(formValues.globalRatings.items).filter(v => v !== null).length
+    const globalCompleted = Object.values(formValues.globalRatings.items).filter(v => v != null).length
     progress.global = Math.round((globalCompleted / 3) * 100)
 
     // Log - check if there are any entries
