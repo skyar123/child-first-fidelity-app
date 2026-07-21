@@ -130,7 +130,7 @@ async function callGemini(config: AiConfig, messages: ChatMessage[]): Promise<st
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${encodeURIComponent(
     config.apiKey
   )}`
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -150,7 +150,7 @@ async function callGemini(config: AiConfig, messages: ChatMessage[]): Promise<st
 }
 
 async function callOpenAI(config: AiConfig, messages: ChatMessage[]): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ async function callOpenAI(config: AiConfig, messages: ChatMessage[]): Promise<st
 }
 
 async function callAnthropic(config: AiConfig, messages: ChatMessage[]): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -205,8 +205,31 @@ async function readError(res: Response): Promise<string> {
   if (res.status === 401 || res.status === 403) {
     return `Your API key was rejected (${res.status}). Check the key and provider in settings.`
   }
-  if (res.status === 429) return 'Rate limit reached for your API key. Please wait a moment and try again.'
+  if (res.status === 429) {
+    // Free tiers have low per-minute/day limits; the provider detail says which.
+    return `The provider is rate-limiting this key (429). ${
+      detail || 'Free tiers allow only a few requests per minute — wait a moment and try again.'
+    }`.trim()
+  }
   return `Request failed (${res.status}). ${detail}`.trim()
+}
+
+// Retry transient rate-limit / overload responses a couple of times with
+// backoff before giving up, so a first-message 429 doesn't just fail.
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  retries = 2,
+  backoffMs = 1200
+): Promise<Response> {
+  let res = await fetch(url, init)
+  let attempt = 0
+  while ((res.status === 429 || res.status === 503) && attempt < retries) {
+    await new Promise(r => setTimeout(r, backoffMs * (attempt + 1)))
+    res = await fetch(url, init)
+    attempt++
+  }
+  return res
 }
 
 export async function sendChat(messages: ChatMessage[]): Promise<string> {

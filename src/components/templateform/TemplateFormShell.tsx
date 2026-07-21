@@ -495,11 +495,24 @@ function RecordEditor({
                       <div className="flex items-start gap-2">
                         <h2 className="font-semibold text-gray-900 flex-1">{activeSection.title}</h2>
                         {answered.total > 0 && (
-                          <span className="text-[11px] font-medium text-gray-400 flex-shrink-0 mt-1">
-                            {answered.done}/{answered.total}
-                          </span>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-bold text-gray-800 leading-none">
+                              {Math.round((answered.done / answered.total) * 100)}%
+                            </div>
+                            <div className="text-[11px] font-medium text-gray-400 mt-0.5">
+                              {answered.done}/{answered.total}
+                            </div>
+                          </div>
                         )}
                       </div>
+                      {answered.total > 0 && (
+                        <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${accent.badge}`}
+                            style={{ width: `${Math.round((answered.done / answered.total) * 100)}%` }}
+                          />
+                        </div>
+                      )}
                       {activeSection.description && (
                         <p className="text-xs text-gray-500 mt-0.5">{activeSection.description}</p>
                       )}
